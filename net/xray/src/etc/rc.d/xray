@@ -1,0 +1,43 @@
+#!/bin/sh
+#
+# rc.d script for xray-core (multi-file confdir mode)
+#
+# PROVIDE: xray
+# REQUIRE: NETWORKING
+# KEYWORD: shutdown
+
+. /etc/rc.subr
+
+name="xray"
+rcvar="xray_enable"
+
+: ${xray_enable:="YES"}
+
+pidfile="/var/run/xray.pid"
+xray_bin="/usr/local/bin/xray"
+xray_confdir="/usr/local/etc/xray/conf.d"
+
+command="/usr/sbin/daemon"
+command_args="-p ${pidfile} ${xray_bin} run -confdir ${xray_confdir}"
+
+# daemon(8) forks; use a wrapper pidfile check
+start_precmd="xray_precmd"
+stop_postcmd="xray_postcmd"
+
+xray_precmd()
+{
+    if [ ! -d "${xray_confdir}" ]; then
+        err 1 "xray confdir ${xray_confdir} missing, run 'configctl xray reconfigure' first"
+    fi
+    # validate config before starting
+    if ! ${xray_bin} run -test -confdir ${xray_confdir} >/dev/null 2>&1; then
+        err 1 "xray config test failed, not starting"
+    fi
+}
+
+xray_postcmd()
+{
+    rm -f "${pidfile}"
+}
+
+run_rc_command "$1"

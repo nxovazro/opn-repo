@@ -1,0 +1,10 @@
+Web management interface for xray-core on OPNsense.
+
+Features:
+ - Inbound editor (dokodemo-door, socks, http, vless, vmess, trojan, shadowsocks, ...)
+ - Outbound subscription import (vless/vmess/trojan/ss links, base64 lists, JSON)
+ - Routing editor with per-rule priority (applied in priority order)
+ - geosite.dat category extraction with multi-select dropdown of common categories
+
+Configuration is stored as JSON under /usr/local/etc/xray/ui/ and compiled
+into xray's multi-file confdir (/usr/local/etc/xray/conf.d/) on apply.

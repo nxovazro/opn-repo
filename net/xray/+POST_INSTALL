@@ -1,0 +1,47 @@
+#!/bin/sh
+#
+# +POST_INSTALL for os-xray
+#
+
+XRAY_ETC=/usr/local/etc/xray
+UI_DIR=${XRAY_ETC}/ui
+CONFDIR=${XRAY_ETC}/conf.d
+
+mkdir -p "${UI_DIR}" "${CONFDIR}"
+chmod 750 "${UI_DIR}" "${CONFDIR}"
+
+# seed empty UI stores if missing (never overwrite existing config)
+for f in settings.json inbounds.json outbounds.json routing.json subscriptions.json geosite_categories.json; do
+    if [ ! -f "${UI_DIR}/${f}" ]; then
+        case "${f}" in
+            settings.json)
+                printf '%s\n' '{"enabled":false,"xray_bin":"/usr/local/bin/xray","confdir":"/usr/local/etc/xray/conf.d","asset_dir":"/usr/local/etc/xray","log_level":"warning","log_access":"","log_error":"","api_listen":"","geosite_url":"https://github.com/v2fly/domain-list-community/releases/latest/download/dlc.dat","geoip_url":"https://github.com/v2fly/geoip/releases/latest/download/geoip.dat"}' > "${UI_DIR}/${f}"
+                ;;
+            inbounds.json)  printf '%s\n' '{"inbounds":[]}' > "${UI_DIR}/${f}" ;;
+            outbounds.json) printf '%s\n' '{"outbounds":[]}' > "${UI_DIR}/${f}" ;;
+            routing.json)   printf '%s\n' '{"domainStrategy":"IPIfNonMatch","rules":[]}' > "${UI_DIR}/${f}" ;;
+            subscriptions.json) printf '%s\n' '{"subscriptions":[]}' > "${UI_DIR}/${f}" ;;
+            geosite_categories.json) printf '%s\n' '{"updated":"","source":"","categories":[]}' > "${UI_DIR}/${f}" ;;
+        esac
+    fi
+done
+chmod 640 ${UI_DIR}/*.json
+
+# make helper scripts executable
+chmod +x /usr/local/opnsense/scripts/xray/*.py 2>/dev/null
+
+# try to fetch geosite.dat/geoip.dat on first install (non-fatal)
+if [ ! -f "${XRAY_ETC}/geosite.dat" ]; then
+    /usr/local/bin/fetch -q -o "${XRAY_ETC}/geosite.dat" \
+        "https://github.com/v2fly/domain-list-community/releases/latest/download/dlc.dat" 2>/dev/null || true
+fi
+if [ ! -f "${XRAY_ETC}/geoip.dat" ]; then
+    /usr/local/bin/fetch -q -o "${XRAY_ETC}/geoip.dat" \
+        "https://github.com/v2fly/geoip/releases/latest/download/geoip.dat" 2>/dev/null || true
+fi
+
+# refresh configd so new actions are picked up
+/usr/sbin/service configd restart 2>/dev/null || true
+
+echo "os-xray installed. Open VPN -> Xray in the OPNsense web UI to configure."
+exit 0

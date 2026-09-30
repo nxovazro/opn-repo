@@ -1,0 +1,11 @@
+<menu>
+  <VPN>
+    <Xray cssClass="fa fa-random" order="50">
+      <General url="/ui/xray/general/index" order="10"/>
+      <Inbound url="/ui/xray/inbound/index" order="20"/>
+      <Outbound url="/ui/xray/outbound/index" order="30"/>
+      <Routing url="/ui/xray/routing/index" order="40"/>
+      <Geosite url="/ui/xray/geosite/index" order="50"/>
+    </Xray>
+  </VPN>
+</menu>

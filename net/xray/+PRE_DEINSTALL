@@ -1,0 +1,10 @@
+#!/bin/sh
+#
+# +PRE_DEINSTALL for os-xray
+# stop the service, keep user configuration in place
+#
+
+/usr/local/etc/rc.d/xray stop 2>/dev/null || true
+
+echo "os-xray removed. Configuration kept under /usr/local/etc/xray/."
+exit 0

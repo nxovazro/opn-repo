@@ -1,0 +1,9 @@
+<acl>
+   <page-vpn-xray>
+      <name>VPN: Xray</name>
+      <patterns>
+         <pattern>ui/xray/*</pattern>
+         <pattern>api/xray/*</pattern>
+      </patterns>
+   </page-vpn-xray>
+</acl>
