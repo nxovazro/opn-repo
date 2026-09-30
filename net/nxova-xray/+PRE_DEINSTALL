@@ -6,5 +6,9 @@
 
 /usr/local/etc/rc.d/xray stop 2>/dev/null || true
 
+# flush the web UI menu/ACL cache so the Xray menu disappears immediately
+/usr/local/sbin/pluginctl -cq cache_flush 2>/dev/null || \
+    rm -f /var/lib/php/tmp/opnsense_menu_cache.xml 2>/dev/null || true
+
 echo "os-nxova-xray removed. Configuration kept under /usr/local/etc/xray/."
 exit 0
