@@ -43,5 +43,10 @@ chmod 644 "${XRAY_ETC}"/geosite.dat "${XRAY_ETC}"/geoip.dat 2>/dev/null || true
 # refresh configd so new actions are picked up
 /usr/sbin/service configd restart 2>/dev/null || true
 
+# flush the web UI menu/ACL cache so the Xray menu appears immediately
+# (pkg installs from a third-party repo don't trigger rc.configure_plugins)
+/usr/local/sbin/pluginctl -cq cache_flush 2>/dev/null || \
+    rm -f /var/lib/php/tmp/opnsense_menu_cache.xml 2>/dev/null || true
+
 echo "os-nxova-xray installed. Open VPN -> Xray in the OPNsense web UI to configure."
 exit 0
