@@ -1,42 +1,96 @@
 #!/bin/sh
-# os-nxova-xray 自动构建脚本
+# os-nxova-xray 手动打包脚本（不走 OPNsense make package 框架）
 #
-# 执行环境：FreeBSD 15.0（参考 nxovaeng/opn-box 的做法），由 .github/workflows/build.yml
-# 经 vmactions/freebsd-vm 调用；也可以在任意 FreeBSD 15.0 上手动执行：
+# 为什么手动打包：
+# OPNsense 的 make package 框架会在 +MANIFEST 里写入大量 annotations
+# （product_id、product_version 等），而 pkg 2.4.x 生成的这种 manifest
+# 在 pkg 2.3.1（OPNsense 26.7 自带）上安装时会 segfault
+# （FreeBSD bug #290959，崩在 sqlite3 写 manifestdigest 时）。
+# 手写极简 manifest（参考 nxovaeng/opn-box 的做法）可避开此问题。
 #
-# 注意：不要用 FreeBSD 15.1+ 构建！15.1 自带 pkg 2.4.2，打出来的包在
-# pkg 2.3.1 上安装会 segfault（FreeBSD bug #290959，崩在 sqlite3 写
-# manifestdigest 时）。15.0 的 pkg 应为 2.3.x，与 OPNsense 26.7 的
-# pkg 2.3.1 兼容。如果 15.0 构建的包依然 segfault，说明 15.0 的 pkg
-# 也是 2.4.x，需另想办法（如手动构造 +MANIFEST）。
-#     sh autobuild/build.sh
-#
-# 产物：autobuild/dist/（os-nxova-xray-*.pkg + pkg repo 元数据 + index.html），
-# workflow 会把它发布到 GitHub Pages。
+# 执行环境：FreeBSD 15.0（vmactions/freebsd-vm），由 .github/workflows/build.yml 调用。
+# 产物：autobuild/dist/（os-nxova-xray-*.pkg + pkg repo 元数据 + index.html）
 set -eu
 
 REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
 cd "$REPO_ROOT"
 
-echo ">>> [1/4] 安装构建依赖 (xray-core, 满足 PLUGIN_DEPENDS 检查)..."
-pkg update -f
-pkg install -y xray-core
+PLUGIN_DIR="$REPO_ROOT/net/nxova-xray"
+SRC_DIR="$PLUGIN_DIR/src"
 
-echo ">>> [2/4] 构建 os-nxova-xray 包 (make -C net/nxova-xray package)..."
-# PLUGIN_VERSION 必须每次递增，否则 pkg upgrade 会认为已是最新而不升级。
-# 用 UTC 日期时间生成版本：1.YYYYMMDDHHMM
+# 版本号：1.YYYYMMDDHHMM（UTC），必须每次递增否则 pkg upgrade 不认
 PKG_VERSION="1.$(date -u +%Y%m%d%H%M)"
 echo ">>> 包版本: $PKG_VERSION"
-make -C net/nxova-xray package PLUGIN_VERSION="$PKG_VERSION"
 
-echo ">>> [3/4] 生成 pkg 仓库元数据..."
+echo ">>> [1/4]  staging 文件..."
+STAGE=/tmp/nxova-xray-stage
+rm -rf "$STAGE"
+mkdir -p "$STAGE/usr/local"
+cp -a "$SRC_DIR/etc" "$STAGE/usr/local/"
+cp -a "$SRC_DIR/opnsense" "$STAGE/usr/local/"
+# version 文件（OPNsense 插件版本标记）
+mkdir -p "$STAGE/usr/local/opnsense/version"
+echo "$PKG_VERSION" > "$STAGE/usr/local/opnsense/version/nxova-xray"
+
+# 生成 plist（相对 /usr/local 的文件列表）
+PLIST=/tmp/nxova-xray-plist
+(cd "$STAGE/usr/local" && find . -type f | sed 's|^\./||' | sort) > "$PLIST"
+echo ">>> 文件数: $(wc -l < "$PLIST")"
+
+echo ">>> [2/4] 生成极简 manifest（无 annotations）..."
+# 用 python 做转义，避免 shell 引号地狱
+python3 - "$PLUGIN_DIR" "$PKG_VERSION" << 'PYEOF'
+import sys
+
+plugin_dir = sys.argv[1]
+pkg_version = sys.argv[2]
+
+def ucl_escape(s):
+    # UCL 双引号字符串转义
+    return s.replace('\\', '\\\\').replace('"', '\\"').replace('\n', '\\n').replace('\t', '\\t')
+
+with open(f"{plugin_dir}/+POST_INSTALL") as f:
+    post_install = f.read()
+with open(f"{plugin_dir}/+PRE_DEINSTALL") as f:
+    pre_deinstall = f.read()
+
+manifest = f'''name: os-nxova-xray
+version: "{pkg_version}"
+origin: opnsense/os-nxova-xray
+comment: "Xray-core web management interface"
+desc: "Web management interface for xray-core on OPNsense."
+maintainer: "nxovazro"
+www: "https://opnsense.org/"
+prefix: /usr/local
+categories: [net]
+abi: "FreeBSD:15:amd64"
+arch: "freebsd:15:x86:64"
+deps: {{
+    xray-core: {{
+        origin: "security/xray-core",
+        version: "26.7.28_1"
+    }}
+}}
+scripts: {{
+    post-install: "{ucl_escape(post_install)}",
+    pre-deinstall: "{ucl_escape(pre_deinstall)}"
+}}
+'''
+
+with open('/tmp/nxova-xray-manifest.ucl', 'w') as f:
+    f.write(manifest)
+print("manifest written")
+PYEOF
+
+echo ">>> [3/4] pkg create 打包..."
 DIST="$REPO_ROOT/autobuild/dist"
 rm -rf "$DIST"
 mkdir -p "$DIST"
-cp net/nxova-xray/work/pkg/*.pkg "$DIST/"
-(cd "$DIST" && pkg repo .)
+pkg create -M /tmp/nxova-xray-manifest.ucl -p "$PLIST" -r "$STAGE" -o "$DIST"
+ls -la "$DIST"
 
-echo ">>> [4/4] 生成索引页..."
+echo ">>> [4/4] 生成仓库元数据和索引页..."
+(cd "$DIST" && pkg repo .)
 PKGFILE=$(ls "$DIST"/os-nxova-xray-*.pkg | head -n 1)
 PKGBASE=$(basename "$PKGFILE")
 BUILDDATE=$(date -u "+%Y-%m-%d %H:%M UTC")
