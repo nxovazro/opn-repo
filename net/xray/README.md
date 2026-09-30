@@ -1,5 +1,7 @@
 # os-xray —— OPNsense 26.7 的 xray-core Web 管理插件
 
+[![build](https://github.com/nxovazro/opn-repo/actions/workflows/build.yml/badge.svg)](https://github.com/nxovazro/opn-repo/actions/workflows/build.yml)
+
 为 OPNsense 26.7 适配的 `os-xray` 插件：提供 xray-core 的 Web 管理界面。
 配置存 OPNsense 标准 `config.xml`（经 MVC 模型 `OPNsense/Xray`），支持入站编辑、
 出站管理（含订阅与分享链接导入）、带优先级的路由编辑器、DNS 分流、

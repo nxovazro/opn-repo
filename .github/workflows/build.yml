@@ -1,0 +1,36 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'net/xray/**'
+      - 'autobuild/**'
+      - '.github/workflows/build.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write   # 发布到 gh-pages 分支需要
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build os-xray package in FreeBSD 15.1 VM
+        uses: vmactions/freebsd-vm@v1
+        with:
+          release: '15.1'
+          usesh: true
+          copyback: true
+          run: |
+            sh autobuild/build.sh
+
+      - name: Deploy pkg repo to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./autobuild/dist
+          publish_branch: gh-pages
