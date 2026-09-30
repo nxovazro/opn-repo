@@ -35,35 +35,77 @@
   </div>
 </div>
 
-<div id="dialog_sub" title="{{ lang._('Subscription') }}" style="display:none;">
-  <table class="table table-condensed">
-    <tr><td style="width:120px;">{{ lang._('Enabled') }}</td><td><input type="checkbox" id="s_enabled" checked></td></tr>
-    <tr><td>{{ lang._('Name') }}</td><td><input type="text" id="s_name" class="form-control"></td></tr>
-    <tr><td>{{ lang._('URL') }}</td><td><input type="text" id="s_url" class="form-control" style="max-width:520px;"></td></tr>
-  </table>
+<div class="modal fade" id="dialog_sub" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="{{ lang._('Close') }}"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">{{ lang._('Subscription') }}</h4>
+      </div>
+      <div class="modal-body">
+      <table class="table table-condensed">
+        <tr><td style="width:120px;">{{ lang._('Enabled') }}</td><td><input type="checkbox" id="s_enabled" checked></td></tr>
+        <tr><td>{{ lang._('Name') }}</td><td><input type="text" id="s_name" class="form-control"></td></tr>
+        <tr><td>{{ lang._('URL') }}</td><td><input type="text" id="s_url" class="form-control" style="max-width:520px;"></td></tr>
+      </table>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">{{ lang._('Cancel') }}</button>
+        <button type="button" class="btn btn-primary" id="btn_save_sub">{{ lang._('Save') }}</button>
+      </div>
+    </div>
+  </div>
 </div>
 
-<div id="dialog_ob" title="{{ lang._('Outbound') }}" style="display:none;">
-  <table class="table table-condensed">
-    <tr><td style="width:150px;">{{ lang._('Enabled') }}</td><td><input type="checkbox" id="o_enabled" checked></td></tr>
-    <tr><td>{{ lang._('Tag') }}</td><td><input type="text" id="o_tag" class="form-control"></td></tr>
-    <tr><td>{{ lang._('Protocol') }}</td><td><select id="o_protocol" class="selectpicker">
-      <option value="freedom">freedom</option><option value="blackhole">blackhole</option>
-      <option value="vless">vless</option><option value="vmess">vmess</option>
-      <option value="trojan">trojan</option><option value="shadowsocks">shadowsocks</option>
-      <option value="socks">socks</option><option value="http">http</option>
-      <option value="wireguard">wireguard</option><option value="dns">dns</option>
-    </select></td></tr>
-    <tr><td colspan="2">{{ lang._('settings (JSON)') }}
-      <textarea id="o_settings" class="form-control" rows="8"></textarea></td></tr>
-    <tr><td colspan="2">{{ lang._('streamSettings (JSON)') }}
-      <textarea id="o_stream" class="form-control" rows="6"></textarea></td></tr>
-  </table>
+<div class="modal fade" id="dialog_ob" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="{{ lang._('Close') }}"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">{{ lang._('Outbound') }}</h4>
+      </div>
+      <div class="modal-body">
+      <table class="table table-condensed">
+        <tr><td style="width:150px;">{{ lang._('Enabled') }}</td><td><input type="checkbox" id="o_enabled" checked></td></tr>
+        <tr><td>{{ lang._('Tag') }}</td><td><input type="text" id="o_tag" class="form-control"></td></tr>
+        <tr><td>{{ lang._('Protocol') }}</td><td><select id="o_protocol" class="selectpicker">
+          <option value="freedom">freedom</option><option value="blackhole">blackhole</option>
+          <option value="vless">vless</option><option value="vmess">vmess</option>
+          <option value="trojan">trojan</option><option value="shadowsocks">shadowsocks</option>
+          <option value="socks">socks</option><option value="http">http</option>
+          <option value="wireguard">wireguard</option><option value="dns">dns</option>
+        </select></td></tr>
+        <tr><td colspan="2">{{ lang._('settings (JSON)') }}
+          <textarea id="o_settings" class="form-control" rows="8"></textarea></td></tr>
+        <tr><td colspan="2">{{ lang._('streamSettings (JSON)') }}
+          <textarea id="o_stream" class="form-control" rows="6"></textarea></td></tr>
+      </table>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">{{ lang._('Cancel') }}</button>
+        <button type="button" class="btn btn-primary" id="btn_save_ob">{{ lang._('Save') }}</button>
+      </div>
+    </div>
+  </div>
 </div>
 
-<div id="dialog_import" title="{{ lang._('Import from share links') }}" style="display:none;">
-  <p class="text-muted"><small>{{ lang._('Paste vless://, vmess://, trojan://, ss:// or socks:// links, one per line. They will be parsed into structured manual outbounds.') }}</small></p>
-  <textarea id="i_links" class="form-control" rows="10" placeholder="vless://..."></textarea>
+<div class="modal fade" id="dialog_import" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="{{ lang._('Close') }}"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">{{ lang._('Import from share links') }}</h4>
+      </div>
+      <div class="modal-body">
+      <p class="text-muted"><small>{{ lang._('Paste vless://, vmess://, trojan://, ss:// or socks:// links, one per line. They will be parsed into structured manual outbounds.') }}</small></p>
+      <textarea id="i_links" class="form-control" rows="10" placeholder="vless://..."></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">{{ lang._('Cancel') }}</button>
+        <button type="button" class="btn btn-primary" id="btn_import_go">{{ lang._('Import') }}</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -127,21 +169,18 @@ $(document).ready(function() {
   }
 
   /* ---- subscription dialog ---- */
-  $('#dialog_sub').dialog({autoOpen: false, modal: true, width: 620, buttons: [
-    {text: '{{ lang._('Save') }}', click: function() {
-      var payload = {enabled: $('#s_enabled').is(':checked'), name: $('#s_name').val().trim(), url: $('#s_url').val().trim()};
-      var url = editingSub ? subApi + '/set/' + editingSub : subApi + '/add';
-      ajaxCall(url, payload, function(data) {
-        if (data.result === 'saved') { $('#dialog_sub').dialog('close'); reloadSubs(); }
-        else { stdDialogInform('Error', esc(JSON.stringify(data.validations || data)), '{{ lang._('Close') }}'); }
-      });
-    }},
-    {text: '{{ lang._('Cancel') }}', click: function() { $(this).dialog('close'); }}
-  ]});
+  $('#btn_save_sub').click(function() {
+    var payload = {enabled: $('#s_enabled').is(':checked'), name: $('#s_name').val().trim(), url: $('#s_url').val().trim()};
+    var url = editingSub ? subApi + '/set/' + editingSub : subApi + '/add';
+    ajaxCall(url, payload, function(data) {
+      if (data.result === 'saved') { $('#dialog_sub').modal('hide'); reloadSubs(); }
+      else { stdDialogInform('Error', esc(JSON.stringify(data.validations || data)), '{{ lang._('Close') }}'); }
+    });
+  });
   $('#btn_add_sub').click(function() {
     editingSub = null;
     $('#s_enabled').prop('checked', true); $('#s_name').val(''); $('#s_url').val('');
-    $('#dialog_sub').dialog('open');
+    $('#dialog_sub').modal('show');
   });
   $('#grid_sub').on('click', '.sub_edit', function() {
     ajaxCall(subApi + '/get/' + $(this).data('uuid'), {}, function(data) {
@@ -149,7 +188,7 @@ $(document).ready(function() {
         editingSub = data.item.uuid;
         $('#s_enabled').prop('checked', !!data.item.enabled);
         $('#s_name').val(data.item.name); $('#s_url').val(data.item.url);
-        $('#dialog_sub').dialog('open');
+        $('#dialog_sub').modal('show');
       }
     });
   });
@@ -188,32 +227,29 @@ $(document).ready(function() {
   $('#btn_update_all').click(function() { doUpdate(null, this); });
 
   /* ---- outbound dialog ---- */
-  $('#dialog_ob').dialog({autoOpen: false, modal: true, width: 640, buttons: [
-    {text: '{{ lang._('Save') }}', click: function() {
-      var payload;
-      try {
-        payload = {
-          enabled: $('#o_enabled').is(':checked'),
-          tag: $('#o_tag').val().trim(),
-          protocol: $('#o_protocol').val(),
-          settings: parseJsonField('#o_settings', 'settings'),
-          streamSettings: parseJsonField('#o_stream', 'streamSettings')
-        };
-      } catch (e) { stdDialogInform('Error', esc(e), '{{ lang._('Close') }}'); return; }
-      var url = editingOb ? obApi + '/set/' + editingOb : obApi + '/add';
-      ajaxCall(url, payload, function(data) {
-        if (data.result === 'saved') { $('#dialog_ob').dialog('close'); reloadObs(); }
-        else { stdDialogInform('Error', esc(JSON.stringify(data.validations || data)), '{{ lang._('Close') }}'); }
-      });
-    }},
-    {text: '{{ lang._('Cancel') }}', click: function() { $(this).dialog('close'); }}
-  ]});
+  $('#btn_save_ob').click(function() {
+    var payload;
+    try {
+      payload = {
+        enabled: $('#o_enabled').is(':checked'),
+        tag: $('#o_tag').val().trim(),
+        protocol: $('#o_protocol').val(),
+        settings: parseJsonField('#o_settings', 'settings'),
+        streamSettings: parseJsonField('#o_stream', 'streamSettings')
+      };
+    } catch (e) { stdDialogInform('Error', esc(e), '{{ lang._('Close') }}'); return; }
+    var url = editingOb ? obApi + '/set/' + editingOb : obApi + '/add';
+    ajaxCall(url, payload, function(data) {
+      if (data.result === 'saved') { $('#dialog_ob').modal('hide'); reloadObs(); }
+      else { stdDialogInform('Error', esc(JSON.stringify(data.validations || data)), '{{ lang._('Close') }}'); }
+    });
+  });
   $('#btn_add_ob').click(function() {
     editingOb = null;
     $('#o_enabled').prop('checked', true); $('#o_tag').val('');
     $('#o_protocol').val('freedom'); $('#o_settings').val(''); $('#o_stream').val('');
     $('.selectpicker').selectpicker('refresh');
-    $('#dialog_ob').dialog('open');
+    $('#dialog_ob').modal('show');
   });
   $('#grid_ob').on('click', '.ob_edit', function() {
     ajaxCall(obApi + '/get/' + $(this).data('uuid'), {}, function(data) {
@@ -224,7 +260,7 @@ $(document).ready(function() {
         $('#o_tag').val(it.tag); $('#o_protocol').val(it.protocol);
         $('#o_settings').val(fmtJson(it.settings)); $('#o_stream').val(fmtJson(it.streamSettings));
         $('.selectpicker').selectpicker('refresh');
-        $('#dialog_ob').dialog('open');
+        $('#dialog_ob').modal('show');
       }
     });
   });
@@ -239,26 +275,23 @@ $(document).ready(function() {
   });
 
   /* ---- import from share links ---- */
-  $('#dialog_import').dialog({autoOpen: false, modal: true, width: 640, buttons: [
-    {text: '{{ lang._('Import') }}', click: function() {
-      var links = $('#i_links').val();
-      if (!links.trim()) { return; }
-      ajaxCall(obApi + '/import', {links: links}, function(data) {
-        if (data.result === 'saved') {
-          $('#dialog_import').dialog('close');
-          $('#i_links').val('');
-          stdDialogInform('OK',
-            '{{ lang._('Added') }}: ' + data.added + ' / {{ lang._('Skipped') }}: ' + data.skipped,
-            '{{ lang._('Close') }}');
-          reloadObs();
-        } else {
-          stdDialogInform('Error', esc(data.error || JSON.stringify(data)), '{{ lang._('Close') }}');
-        }
-      });
-    }},
-    {text: '{{ lang._('Cancel') }}', click: function() { $(this).dialog('close'); }}
-  ]});
-  $('#btn_import_ob').click(function() { $('#dialog_import').dialog('open'); });
+  $('#btn_import_go').click(function() {
+    var links = $('#i_links').val();
+    if (!links.trim()) { return; }
+    ajaxCall(obApi + '/import', {links: links}, function(data) {
+      if (data.result === 'saved') {
+        $('#dialog_import').modal('hide');
+        $('#i_links').val('');
+        stdDialogInform('OK',
+          '{{ lang._('Added') }}: ' + data.added + ' / {{ lang._('Skipped') }}: ' + data.skipped,
+          '{{ lang._('Close') }}');
+        reloadObs();
+      } else {
+        stdDialogInform('Error', esc(data.error || JSON.stringify(data)), '{{ lang._('Close') }}');
+      }
+    });
+  });
+  $('#btn_import_ob').click(function() { $('#dialog_import').modal('show'); });
 
   reloadSubs();
   reloadObs();

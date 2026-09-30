@@ -20,42 +20,56 @@
   </div>
 </div>
 
-<div id="dialog" title="{{ lang._('Routing rule') }}" style="display:none;">
-  <table class="table table-condensed">
-    <tr>
-      <td style="width:140px;">{{ lang._('Enabled') }}</td><td><input type="checkbox" id="r_enabled" checked></td>
-      <td style="width:100px;">{{ lang._('Priority') }}</td>
-      <td><input type="number" id="r_priority" class="form-control" value="100" step="1"></td>
-    </tr>
-    <tr><td>{{ lang._('Name') }}</td><td colspan="3"><input type="text" id="r_name" class="form-control" placeholder="{{ lang._('description only, not written to xray config') }}"></td></tr>
-    <tr><td>{{ lang._('Domain') }}<br><span class="text-muted"><small>geosite {{ lang._('multi-select') }}</small></span></td>
-      <td colspan="3"><select id="r_geosite" class="selectpicker" multiple data-live-search="true" data-width="100%"></select></td></tr>
-    <tr><td>{{ lang._('Domain (manual)') }}<br><span class="text-muted"><small>{{ lang._('one per line: domain:/full:/keyword:/regexp: or bare domain') }}</small></span></td>
-      <td colspan="3"><textarea id="r_domain_manual" class="form-control" rows="2"></textarea></td></tr>
-    <tr><td>{{ lang._('IP') }}<br><span class="text-muted"><small>{{ lang._('one per line: geoip:XX or CIDR') }}</small></span></td>
-      <td colspan="3"><textarea id="r_ip" class="form-control" rows="2"></textarea></td></tr>
-    <tr>
-      <td>{{ lang._('Port') }}</td><td><input type="text" id="r_port" class="form-control" placeholder="80,443"></td>
-      <td>{{ lang._('Network') }}</td>
-      <td><select id="r_network" class="selectpicker" multiple>
-        <option value="tcp">tcp</option><option value="udp">udp</option></select></td>
-    </tr>
-    <tr>
-      <td>{{ lang._('Protocol') }}<br><span class="text-muted"><small>{{ lang._('comma separated') }}</small></span></td>
-      <td><input type="text" id="r_protocol" class="form-control" placeholder="tls,http,bittorrent"></td>
-      <td>{{ lang._('InboundTag') }}</td>
-      <td><select id="r_inboundTag" class="selectpicker" multiple data-width="100%"></select></td>
-    </tr>
-    <tr>
-      <td>{{ lang._('Source') }}<br><span class="text-muted"><small>{{ lang._('comma separated IP/CIDR') }}</small></span></td>
-      <td><input type="text" id="r_source" class="form-control"></td>
-      <td>{{ lang._('User') }}</td><td><input type="text" id="r_user" class="form-control" placeholder="{{ lang._('comma separated emails') }}"></td>
-    </tr>
-    <tr><td>{{ lang._('Target outbound') }}</td>
-      <td colspan="3"><select id="r_outboundTag" class="selectpicker" data-live-search="true" data-width="100%"></select></td></tr>
-    <tr><td colspan="4">{{ lang._('attrs (JSON, optional)') }}
-      <textarea id="r_attrs" class="form-control" rows="2" placeholder='{"attr1":["val"]}'></textarea></td></tr>
-  </table>
+<div class="modal fade" id="dialog" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="{{ lang._('Close') }}"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">{{ lang._('Routing rule') }}</h4>
+      </div>
+      <div class="modal-body">
+      <table class="table table-condensed">
+        <tr>
+          <td style="width:140px;">{{ lang._('Enabled') }}</td><td><input type="checkbox" id="r_enabled" checked></td>
+          <td style="width:100px;">{{ lang._('Priority') }}</td>
+          <td><input type="number" id="r_priority" class="form-control" value="100" step="1"></td>
+        </tr>
+        <tr><td>{{ lang._('Name') }}</td><td colspan="3"><input type="text" id="r_name" class="form-control" placeholder="{{ lang._('description only, not written to xray config') }}"></td></tr>
+        <tr><td>{{ lang._('Domain') }}<br><span class="text-muted"><small>geosite {{ lang._('multi-select') }}</small></span></td>
+          <td colspan="3"><select id="r_geosite" class="selectpicker" multiple data-live-search="true" data-width="100%"></select></td></tr>
+        <tr><td>{{ lang._('Domain (manual)') }}<br><span class="text-muted"><small>{{ lang._('one per line: domain:/full:/keyword:/regexp: or bare domain') }}</small></span></td>
+          <td colspan="3"><textarea id="r_domain_manual" class="form-control" rows="2"></textarea></td></tr>
+        <tr><td>{{ lang._('IP') }}<br><span class="text-muted"><small>{{ lang._('one per line: geoip:XX or CIDR') }}</small></span></td>
+          <td colspan="3"><textarea id="r_ip" class="form-control" rows="2"></textarea></td></tr>
+        <tr>
+          <td>{{ lang._('Port') }}</td><td><input type="text" id="r_port" class="form-control" placeholder="80,443"></td>
+          <td>{{ lang._('Network') }}</td>
+          <td><select id="r_network" class="selectpicker" multiple>
+            <option value="tcp">tcp</option><option value="udp">udp</option></select></td>
+        </tr>
+        <tr>
+          <td>{{ lang._('Protocol') }}<br><span class="text-muted"><small>{{ lang._('comma separated') }}</small></span></td>
+          <td><input type="text" id="r_protocol" class="form-control" placeholder="tls,http,bittorrent"></td>
+          <td>{{ lang._('InboundTag') }}</td>
+          <td><select id="r_inboundTag" class="selectpicker" multiple data-width="100%"></select></td>
+        </tr>
+        <tr>
+          <td>{{ lang._('Source') }}<br><span class="text-muted"><small>{{ lang._('comma separated IP/CIDR') }}</small></span></td>
+          <td><input type="text" id="r_source" class="form-control"></td>
+          <td>{{ lang._('User') }}</td><td><input type="text" id="r_user" class="form-control" placeholder="{{ lang._('comma separated emails') }}"></td>
+        </tr>
+        <tr><td>{{ lang._('Target outbound') }}</td>
+          <td colspan="3"><select id="r_outboundTag" class="selectpicker" data-live-search="true" data-width="100%"></select></td></tr>
+        <tr><td colspan="4">{{ lang._('attrs (JSON, optional)') }}
+          <textarea id="r_attrs" class="form-control" rows="2" placeholder='{"attr1":["val"]}'></textarea></td></tr>
+      </table>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">{{ lang._('Cancel') }}</button>
+        <button type="button" class="btn btn-primary" id="btn_save">{{ lang._('Save') }}</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -169,41 +183,38 @@ $(document).ready(function() {
     $('#r_network').val(item && item.network ? String(item.network).split(',') : []);
     $('#r_network').selectpicker('refresh');
     loadTargets(item && item.outboundTag);
-    $('#dialog').dialog('open');
+    $('#dialog').modal('show');
   }
 
-  $('#dialog').dialog({autoOpen: false, modal: true, width: 760, buttons: [
-    {text: '{{ lang._('Save') }}', click: function() {
-      var payload;
-      try {
-        var at = $('#r_attrs').val().trim();
-        var geos = $('#r_geosite').val() || [];
-        var manual = splitLines($('#r_domain_manual').val()).map(normDomain);
-        payload = {
-          enabled: $('#r_enabled').is(':checked'),
-          priority: parseInt($('#r_priority').val(), 10) || 0,
-          name: $('#r_name').val().trim(),
-          type: 'field',
-          domain: geos.concat(manual),
-          ip: splitLines($('#r_ip').val()),
-          port: $('#r_port').val().trim(),
-          network: ($('#r_network').val() || []).join(','),
-          protocol: $('#r_protocol').val().split(',').map(function(s){return s.trim();}).filter(Boolean),
-          inboundTag: $('#r_inboundTag').val() || [],
-          source: $('#r_source').val().split(',').map(function(s){return s.trim();}).filter(Boolean),
-          user: $('#r_user').val().split(',').map(function(s){return s.trim();}).filter(Boolean),
-          attrs: at ? JSON.parse(at) : {},
-          outboundTag: $('#r_outboundTag').val() || ''
-        };
-      } catch (e) { stdDialogInform('Error', esc('attrs: JSON ' + e.message), '{{ lang._('Close') }}'); return; }
-      var url = editing ? api + '/set/' + editing : api + '/add';
-      ajaxCall(url, payload, function(data) {
-        if (data.result === 'saved') { $('#dialog').dialog('close'); reload(); }
-        else { stdDialogInform('Error', esc(JSON.stringify(data.validations || data)), '{{ lang._('Close') }}'); }
-      });
-    }},
-    {text: '{{ lang._('Cancel') }}', click: function() { $(this).dialog('close'); }}
-  ]});
+  $('#btn_save').click(function() {
+    var payload;
+    try {
+      var at = $('#r_attrs').val().trim();
+      var geos = $('#r_geosite').val() || [];
+      var manual = splitLines($('#r_domain_manual').val()).map(normDomain);
+      payload = {
+        enabled: $('#r_enabled').is(':checked'),
+        priority: parseInt($('#r_priority').val(), 10) || 0,
+        name: $('#r_name').val().trim(),
+        type: 'field',
+        domain: geos.concat(manual),
+        ip: splitLines($('#r_ip').val()),
+        port: $('#r_port').val().trim(),
+        network: ($('#r_network').val() || []).join(','),
+        protocol: $('#r_protocol').val().split(',').map(function(s){return s.trim();}).filter(Boolean),
+        inboundTag: $('#r_inboundTag').val() || [],
+        source: $('#r_source').val().split(',').map(function(s){return s.trim();}).filter(Boolean),
+        user: $('#r_user').val().split(',').map(function(s){return s.trim();}).filter(Boolean),
+        attrs: at ? JSON.parse(at) : {},
+        outboundTag: $('#r_outboundTag').val() || ''
+      };
+    } catch (e) { stdDialogInform('Error', esc('attrs: JSON ' + e.message), '{{ lang._('Close') }}'); return; }
+    var url = editing ? api + '/set/' + editing : api + '/add';
+    ajaxCall(url, payload, function(data) {
+      if (data.result === 'saved') { $('#dialog').modal('hide'); reload(); }
+      else { stdDialogInform('Error', esc(JSON.stringify(data.validations || data)), '{{ lang._('Close') }}'); }
+    });
+  });
 
   $('#btn_add').click(function() { openDialog(null); });
   $('#btn_apply').click(function() {

@@ -49,21 +49,35 @@
   </div>
 </div>
 
-<div id="dialog" title="{{ lang._('DNS server') }}" style="display:none;">
-  <table class="table table-condensed">
-    <tr><td style="width:150px;">{{ lang._('Enabled') }}</td>
-        <td><input type="checkbox" id="s_enabled" checked></td></tr>
-    <tr><td>{{ lang._('Address') }}</td>
-        <td><input type="text" id="s_address" class="form-control" placeholder="8.8.8.8 / https://dns.example/dns-query / 8.8.8.8#dns.example"></td></tr>
-    <tr><td>{{ lang._('Port') }}</td>
-        <td><input type="number" id="s_port" class="form-control" value="53" min="1" max="65535" style="max-width:160px;"></td></tr>
-    <tr><td>{{ lang._('Domains') }}<br><span class="text-muted"><small>{{ lang._('one per line; empty = default server') }}</small></span></td>
-        <td><textarea id="s_domains" class="form-control" rows="3" placeholder="geosite:cn"></textarea></td></tr>
-    <tr><td>{{ lang._('Expect IPs') }}<br><span class="text-muted"><small>{{ lang._('one per line: geoip:cn or CIDR') }}</small></span></td>
-        <td><textarea id="s_expectIPs" class="form-control" rows="2"></textarea></td></tr>
-    <tr><td>{{ lang._('Skip fallback') }}</td>
-        <td><input type="checkbox" id="s_skipFallback"></td></tr>
-  </table>
+<div class="modal fade" id="dialog" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="{{ lang._('Close') }}"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">{{ lang._('DNS server') }}</h4>
+      </div>
+      <div class="modal-body">
+      <table class="table table-condensed">
+        <tr><td style="width:150px;">{{ lang._('Enabled') }}</td>
+            <td><input type="checkbox" id="s_enabled" checked></td></tr>
+        <tr><td>{{ lang._('Address') }}</td>
+            <td><input type="text" id="s_address" class="form-control" placeholder="8.8.8.8 / https://dns.example/dns-query / 8.8.8.8#dns.example"></td></tr>
+        <tr><td>{{ lang._('Port') }}</td>
+            <td><input type="number" id="s_port" class="form-control" value="53" min="1" max="65535" style="max-width:160px;"></td></tr>
+        <tr><td>{{ lang._('Domains') }}<br><span class="text-muted"><small>{{ lang._('one per line; empty = default server') }}</small></span></td>
+            <td><textarea id="s_domains" class="form-control" rows="3" placeholder="geosite:cn"></textarea></td></tr>
+        <tr><td>{{ lang._('Expect IPs') }}<br><span class="text-muted"><small>{{ lang._('one per line: geoip:cn or CIDR') }}</small></span></td>
+            <td><textarea id="s_expectIPs" class="form-control" rows="2"></textarea></td></tr>
+        <tr><td>{{ lang._('Skip fallback') }}</td>
+            <td><input type="checkbox" id="s_skipFallback"></td></tr>
+      </table>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">{{ lang._('Cancel') }}</button>
+        <button type="button" class="btn btn-primary" id="btn_save">{{ lang._('Save') }}</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -132,27 +146,24 @@ $(document).ready(function() {
     $('#s_domains').val(item && item.domains ? item.domains.join('\n') : '');
     $('#s_expectIPs').val(item && item.expectIPs ? item.expectIPs.join('\n') : '');
     $('#s_skipFallback').prop('checked', item ? !!item.skipFallback : false);
-    $('#dialog').dialog('open');
+    $('#dialog').modal('show');
   }
 
-  $('#dialog').dialog({autoOpen: false, modal: true, width: 640, buttons: [
-    {text: '{{ lang._('Save') }}', click: function() {
-      var payload = {
-        enabled: $('#s_enabled').is(':checked'),
-        address: $('#s_address').val().trim(),
-        port: parseInt($('#s_port').val(), 10) || 53,
-        domains: splitLines($('#s_domains').val()),
-        expectIPs: splitLines($('#s_expectIPs').val()),
-        skipFallback: $('#s_skipFallback').is(':checked')
-      };
-      var url = editing ? api + '/set/' + editing : api + '/add';
-      ajaxCall(url, payload, function(data) {
-        if (data.result === 'saved') { $('#dialog').dialog('close'); reload(); }
-        else { stdDialogInform('Error', esc(JSON.stringify(data.validations || data)), '{{ lang._('Close') }}'); }
-      });
-    }},
-    {text: '{{ lang._('Cancel') }}', click: function() { $(this).dialog('close'); }}
-  ]});
+  $('#btn_save').click(function() {
+    var payload = {
+      enabled: $('#s_enabled').is(':checked'),
+      address: $('#s_address').val().trim(),
+      port: parseInt($('#s_port').val(), 10) || 53,
+      domains: splitLines($('#s_domains').val()),
+      expectIPs: splitLines($('#s_expectIPs').val()),
+      skipFallback: $('#s_skipFallback').is(':checked')
+    };
+    var url = editing ? api + '/set/' + editing : api + '/add';
+    ajaxCall(url, payload, function(data) {
+      if (data.result === 'saved') { $('#dialog').modal('hide'); reload(); }
+      else { stdDialogInform('Error', esc(JSON.stringify(data.validations || data)), '{{ lang._('Close') }}'); }
+    });
+  });
 
   $('#btn_add').click(function() { openDialog(null); });
   $('#grid').on('click', '.row_edit', function() {
