@@ -29,16 +29,9 @@ chmod 644 /etc/rc.conf.d/xray
 # make helper scripts executable
 chmod +x /usr/local/opnsense/scripts/xray/*.py 2>/dev/null
 
-# try to fetch geosite.dat/geoip.dat on first install (non-fatal)
-if [ ! -f "${XRAY_ETC}/geosite.dat" ]; then
-    /usr/local/bin/fetch -q -o "${XRAY_ETC}/geosite.dat" \
-        "https://github.com/v2fly/domain-list-community/releases/latest/download/dlc.dat" 2>/dev/null || true
-fi
-if [ ! -f "${XRAY_ETC}/geoip.dat" ]; then
-    /usr/local/bin/fetch -q -o "${XRAY_ETC}/geoip.dat" \
-        "https://github.com/v2fly/geoip/releases/latest/download/geoip.dat" 2>/dev/null || true
-fi
-chmod 644 "${XRAY_ETC}"/geosite.dat "${XRAY_ETC}"/geoip.dat 2>/dev/null || true
+# NOTE: geosite.dat/geoip.dat are intentionally NOT fetched here.
+# Downloading from GitHub at install time can stall the install on slow
+# networks; use the Xray -> Geosite page in the web UI to download them.
 
 # refresh configd so new actions are picked up
 /usr/sbin/service configd restart 2>/dev/null || true
