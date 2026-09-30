@@ -15,6 +15,10 @@ set -eu
 REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
 cd "$REPO_ROOT"
 
+echo ">>> [0/4] 安装 python3（用于生成 manifest）..."
+pkg update -f
+pkg install -y python3
+
 PLUGIN_DIR="$REPO_ROOT/net/nxova-xray"
 SRC_DIR="$PLUGIN_DIR/src"
 
