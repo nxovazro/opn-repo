@@ -52,8 +52,7 @@
       <td>{{ lang._('User') }}</td><td><input type="text" id="r_user" class="form-control" placeholder="{{ lang._('comma separated emails') }}"></td>
     </tr>
     <tr><td>{{ lang._('Target outbound') }}</td>
-      <td><select id="r_outboundTag" class="selectpicker" data-live-search="true" data-width="100%"></select></td>
-      <td>{{ lang._('Balancer') }}</td><td><input type="text" id="r_balancerTag" class="form-control"></td></tr>
+      <td colspan="3"><select id="r_outboundTag" class="selectpicker" data-live-search="true" data-width="100%"></select></td></tr>
     <tr><td colspan="4">{{ lang._('attrs (JSON, optional)') }}
       <textarea id="r_attrs" class="form-control" rows="2" placeholder='{"attr1":["val"]}'></textarea></td></tr>
   </table>
@@ -91,7 +90,7 @@ $(document).ready(function() {
         tr.append($('<td>').html('<input type="checkbox" class="row_toggle" data-uuid="'+r.uuid+'"'+(r.enabled?' checked':'')+'>'));
         tr.append($('<td>').text(r.name || '-'));
         tr.append($('<td>').html('<small>' + esc(matchSummary(r)) + '</small>'));
-        tr.append($('<td>').html('<span class="label label-primary">' + esc(r.outboundTag || r.balancerTag || '-') + '</span>'));
+        tr.append($('<td>').html('<span class="label label-primary">' + esc(r.outboundTag || '-') + '</span>'));
         var act = $('<td>');
         if (idx > 0) act.append('<button class="btn btn-xs btn-default row_up" data-uuid="'+r.uuid+'" title="{{ lang._('Move up (higher precedence)') }}"><i class="fa fa-arrow-up"></i></button> ');
         if (idx < arr.length - 1) act.append('<button class="btn btn-xs btn-default row_down" data-uuid="'+r.uuid+'" title="{{ lang._('Move down') }}"><i class="fa fa-arrow-down"></i></button> ');
@@ -164,7 +163,6 @@ $(document).ready(function() {
     $('#r_protocol').val(csv(item && item.protocol));
     $('#r_source').val(csv(item && item.source));
     $('#r_user').val(csv(item && item.user));
-    $('#r_balancerTag').val(item ? (item.balancerTag || '') : '');
     $('#r_attrs').val(item && item.attrs && Object.keys(item.attrs).length ? JSON.stringify(item.attrs, null, 2) : '');
     loadGeosite(geositeSel);
     loadInboundTags(item && item.inboundTag);
@@ -195,8 +193,7 @@ $(document).ready(function() {
           source: $('#r_source').val().split(',').map(function(s){return s.trim();}).filter(Boolean),
           user: $('#r_user').val().split(',').map(function(s){return s.trim();}).filter(Boolean),
           attrs: at ? JSON.parse(at) : {},
-          outboundTag: $('#r_outboundTag').val() || '',
-          balancerTag: $('#r_balancerTag').val().trim()
+          outboundTag: $('#r_outboundTag').val() || ''
         };
       } catch (e) { stdDialogInform('Error', esc('attrs: JSON ' + e.message), '{{ lang._('Close') }}'); return; }
       var url = editing ? api + '/set/' + editing : api + '/add';

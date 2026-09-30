@@ -21,13 +21,14 @@
 <div class="content-box" style="padding-bottom: 1.5em; margin-top: 15px;">
   <div class="col-md-12">
     <div class="pull-right">
+      <button class="btn btn-default btn-sm" id="btn_import_ob" type="button"><i class="fa fa-clipboard"></i> {{ lang._('Import from share links') }}</button>
       <button class="btn btn-primary btn-sm" id="btn_add_ob" type="button"><i class="fa fa-plus"></i> {{ lang._('Add outbound') }}</button>
     </div>
-    <h4>{{ lang._('Outbounds') }}</h4>
+    <h4>{{ lang._('Outbounds') }} <small>{{ lang._('manual only; subscription nodes are merged automatically at apply time') }}</small></h4>
     <table class="table table-striped table-condensed" id="grid_ob">
       <thead><tr>
         <th>{{ lang._('Enabled') }}</th><th>{{ lang._('Tag') }}</th><th>{{ lang._('Protocol') }}</th>
-        <th>{{ lang._('Source') }}</th><th style="width:130px;">{{ lang._('Actions') }}</th>
+        <th style="width:130px;">{{ lang._('Actions') }}</th>
       </tr></thead>
       <tbody></tbody>
     </table>
@@ -58,6 +59,11 @@
     <tr><td colspan="2">{{ lang._('streamSettings (JSON)') }}
       <textarea id="o_stream" class="form-control" rows="6"></textarea></td></tr>
   </table>
+</div>
+
+<div id="dialog_import" title="{{ lang._('Import from share links') }}" style="display:none;">
+  <p class="text-muted"><small>{{ lang._('Paste vless://, vmess://, trojan://, ss:// or socks:// links, one per line. They will be parsed into structured manual outbounds.') }}</small></p>
+  <textarea id="i_links" class="form-control" rows="10" placeholder="vless://..."></textarea>
 </div>
 
 <script>
@@ -111,10 +117,6 @@ $(document).ready(function() {
         tr.append($('<td>').html('<input type="checkbox" class="ob_toggle" data-uuid="'+r.uuid+'"'+(r.enabled?' checked':'')+'>'));
         tr.append($('<td>').text(r.tag));
         tr.append($('<td>').text(r.protocol));
-        var src = r.from_subscription
-          ? '<span class="label label-info">' + esc(r.subscription || r.from_subscription.substr(0,8)) + '</span>'
-          : '<span class="label label-default">{{ lang._('manual') }}</span>';
-        tr.append($('<td>').html(src));
         var act = $('<td>');
         act.append('<button class="btn btn-xs btn-default ob_edit" data-uuid="'+r.uuid+'"><i class="fa fa-pencil"></i></button> ');
         act.append('<button class="btn btn-xs btn-default ob_del" data-uuid="'+r.uuid+'"><i class="fa fa-trash"></i></button>');
@@ -153,18 +155,18 @@ $(document).ready(function() {
   });
   $('#grid_sub').on('click', '.sub_del', function() {
     var uuid = $(this).data('uuid');
-    stdDialogConfirm('{{ lang._('Confirm') }}', '{{ lang._('Delete this subscription? Imported nodes stay until purged.') }}',
+    stdDialogConfirm('{{ lang._('Confirm') }}', '{{ lang._('Delete this subscription and its cached nodes?') }}',
       '{{ lang._('Yes') }}', '{{ lang._('No') }}', function() {
       ajaxCall(subApi + '/del/' + uuid, {}, function() { reloadSubs(); });
     });
   });
   $('#grid_sub').on('click', '.sub_purge', function() {
     var uuid = $(this).data('uuid');
-    stdDialogConfirm('{{ lang._('Confirm') }}', '{{ lang._('Remove all outbounds imported from this subscription?') }}',
+    stdDialogConfirm('{{ lang._('Confirm') }}', '{{ lang._('Remove this subscription\'s cached nodes? They will no longer be merged at apply time.') }}',
       '{{ lang._('Yes') }}', '{{ lang._('No') }}', function() {
       ajaxCall(subApi + '/purge/' + uuid, {}, function(d) {
-        stdDialogInform('OK', '{{ lang._('Removed') }}: ' + (d.removed || 0), '{{ lang._('Close') }}');
-        reloadObs();
+        stdDialogInform('OK', d.purged ? '{{ lang._('Cache removed') }}' : '{{ lang._('No cache found') }}', '{{ lang._('Close') }}');
+        reloadSubs();
       });
     });
   });
@@ -179,7 +181,7 @@ $(document).ready(function() {
         return r.name + ': ' + r.imported + (r.error ? ' (' + r.error + ')' : '');
       }).join('\n');
       stdDialogInform(data.result === 'ok' ? 'OK' : 'Error', esc(rows || JSON.stringify(data)), '{{ lang._('Close') }}');
-      reloadSubs(); reloadObs();
+      reloadSubs();
     });
   }
   $('#grid_sub').on('click', '.sub_update', function() { doUpdate($(this).data('uuid'), this); });
@@ -235,6 +237,28 @@ $(document).ready(function() {
   $('#grid_ob').on('change', '.ob_toggle', function() {
     ajaxCall(obApi + '/toggle/' + $(this).data('uuid'), {}, function() { reloadObs(); });
   });
+
+  /* ---- import from share links ---- */
+  $('#dialog_import').dialog({autoOpen: false, modal: true, width: 640, buttons: [
+    {text: '{{ lang._('Import') }}', click: function() {
+      var links = $('#i_links').val();
+      if (!links.trim()) { return; }
+      ajaxCall(obApi + '/import', {links: links}, function(data) {
+        if (data.result === 'saved') {
+          $('#dialog_import').dialog('close');
+          $('#i_links').val('');
+          stdDialogInform('OK',
+            '{{ lang._('Added') }}: ' + data.added + ' / {{ lang._('Skipped') }}: ' + data.skipped,
+            '{{ lang._('Close') }}');
+          reloadObs();
+        } else {
+          stdDialogInform('Error', esc(data.error || JSON.stringify(data)), '{{ lang._('Close') }}');
+        }
+      });
+    }},
+    {text: '{{ lang._('Cancel') }}', click: function() { $(this).dialog('close'); }}
+  ]});
+  $('#btn_import_ob').click(function() { $('#dialog_import').dialog('open'); });
 
   reloadSubs();
   reloadObs();

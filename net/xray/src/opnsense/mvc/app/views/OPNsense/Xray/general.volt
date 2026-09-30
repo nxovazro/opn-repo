@@ -7,12 +7,6 @@
     <table class="table table-condensed">
       <tr><td style="width:220px;">{{ lang._('Enabled') }}</td>
           <td><input type="checkbox" id="enabled"></td></tr>
-      <tr><td>{{ lang._('xray binary') }}</td>
-          <td><input type="text" id="xray_bin" class="form-control" style="max-width:420px;"></td></tr>
-      <tr><td>{{ lang._('Config dir (confdir)') }}</td>
-          <td><input type="text" id="confdir" class="form-control" style="max-width:420px;"></td></tr>
-      <tr><td>{{ lang._('Asset dir (geosite.dat / geoip.dat)') }}</td>
-          <td><input type="text" id="asset_dir" class="form-control" style="max-width:420px;"></td></tr>
       <tr><td>{{ lang._('Log level') }}</td>
           <td><select id="log_level" class="selectpicker">
             <option value="debug">debug</option><option value="info">info</option>
@@ -49,7 +43,7 @@
 
 <script>
 $(document).ready(function() {
-  var fields = ['enabled','xray_bin','confdir','asset_dir','log_level','log_access','log_error','api_listen','geosite_url','geoip_url'];
+  var fields = ['enabled','log_level','log_access','log_error','api_listen','geosite_url','geoip_url'];
   function loadSettings() {
     ajaxCall('/api/xray/general/get', {}, function(data) {
       var g = data.general || {};

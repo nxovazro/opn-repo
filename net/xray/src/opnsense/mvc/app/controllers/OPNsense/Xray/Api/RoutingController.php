@@ -31,7 +31,6 @@ class RoutingController extends CrudBase
             'user' => array(),
             'attrs' => array(),
             'outboundTag' => '',
-            'balancerTag' => '',
         );
     }
 
@@ -41,20 +40,20 @@ class RoutingController extends CrudBase
         if (!is_numeric(isset($item['priority']) ? $item['priority'] : null)) {
             $errors[] = 'priority must be numeric';
         }
-        if (trim(isset($item['outboundTag']) ? $item['outboundTag'] : '') === ''
-            && trim(isset($item['balancerTag']) ? $item['balancerTag'] : '') === '') {
-            $errors[] = 'outboundTag or balancerTag must be set';
+        if (trim(isset($item['outboundTag']) ? $item['outboundTag'] : '') === '') {
+            $errors[] = 'outboundTag must be set';
         }
         return $errors;
     }
 
     protected function sortItems($items)
     {
+        // ascending priority; stable for equal priority (keeps UI/config.xml order)
         usort($items, function ($a, $b) {
             $pa = (int)(isset($a['priority']) ? $a['priority'] : 100);
             $pb = (int)(isset($b['priority']) ? $b['priority'] : 100);
             if ($pa === $pb) {
-                return strcmp(isset($a['name']) ? $a['name'] : '', isset($b['name']) ? $b['name'] : '');
+                return 0;
             }
             return $pa < $pb ? -1 : 1;
         });
@@ -108,8 +107,9 @@ class RoutingController extends CrudBase
     }
 
     /**
-     * Return distinct outbound tags referenced by rules + known outbounds,
-     * for the rule editor's target dropdown.
+     * Return distinct outbound tags for the rule editor's target dropdown:
+     * manual outbounds + nodes imported from enabled subscriptions
+     * (derived caches) + tags already referenced by rules.
      */
     public function targetsAction()
     {
@@ -120,12 +120,13 @@ class RoutingController extends CrudBase
                 $tags[] = $o['tag'];
             }
         }
+        foreach (Store::subscriptionNodeTags() as $t) {
+            $tags[] = $t;
+        }
         $rt = Store::load($this->storeName, array());
         foreach (isset($rt[$this->listKey]) ? $rt[$this->listKey] : array() as $r) {
-            foreach (array('outboundTag', 'balancerTag') as $f) {
-                if (!empty($r[$f])) {
-                    $tags[] = $r[$f];
-                }
+            if (!empty($r['outboundTag'])) {
+                $tags[] = $r['outboundTag'];
             }
         }
         $tags = array_values(array_unique($tags));

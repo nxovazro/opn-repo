@@ -1,0 +1,249 @@
+<model>
+    <mount>//OPNsense/xray</mount>
+    <description>os-xray configuration</description>
+    <version>1.0.0</version>
+    <items>
+        <general>
+            <enabled type="BooleanField">
+                <Default>0</Default>
+                <Required>Y</Required>
+            </enabled>
+            <log_level type="OptionField">
+                <Default>warning</Default>
+                <Required>Y</Required>
+                <OptionValues>
+                    <debug>debug</debug>
+                    <info>info</info>
+                    <warning>warning</warning>
+                    <error>error</error>
+                    <none>none</none>
+                </OptionValues>
+            </log_level>
+            <log_access type="TextField"/>
+            <log_error type="TextField"/>
+            <api_listen type="TextField"/>
+            <geosite_url type="TextField">
+                <Default>https://github.com/v2fly/domain-list-community/releases/latest/download/dlc.dat</Default>
+            </geosite_url>
+            <geoip_url type="TextField">
+                <Default>https://github.com/v2fly/geoip/releases/latest/download/geoip.dat</Default>
+            </geoip_url>
+        </general>
+        <inbounds>
+            <inbound type="ArrayField">
+                <enabled type="BooleanField">
+                    <Default>1</Default>
+                    <Required>Y</Required>
+                </enabled>
+                <tag type="TextField">
+                    <Required>Y</Required>
+                </tag>
+                <protocol type="OptionField">
+                    <Default>dokodemo-door</Default>
+                    <Required>Y</Required>
+                    <OptionValues>
+                        <dokodemo-door>dokodemo-door</dokodemo-door>
+                        <socks>socks</socks>
+                        <http>http</http>
+                        <vless>vless</vless>
+                        <vmess>vmess</vmess>
+                        <trojan>trojan</trojan>
+                        <shadowsocks>shadowsocks</shadowsocks>
+                        <wireguard>wireguard</wireguard>
+                    </OptionValues>
+                </protocol>
+                <listen type="TextField">
+                    <Default>127.0.0.1</Default>
+                </listen>
+                <port type="IntegerField">
+                    <Default>10808</Default>
+                    <Required>Y</Required>
+                    <MinimumValue>1</MinimumValue>
+                    <MaximumValue>65535</MaximumValue>
+                </port>
+                <!-- JSON 文本（转义存储），原样透传给 xray -->
+                <settings type="TextField">
+                    <Default>{}</Default>
+                </settings>
+                <streamSettings type="TextField">
+                    <Default>{}</Default>
+                </streamSettings>
+                <sniffing type="TextField">
+                    <Default>{}</Default>
+                </sniffing>
+            </inbound>
+        </inbounds>
+        <outbounds>
+            <outbound type="ArrayField">
+                <enabled type="BooleanField">
+                    <Default>1</Default>
+                    <Required>Y</Required>
+                </enabled>
+                <tag type="TextField">
+                    <Required>Y</Required>
+                </tag>
+                <protocol type="OptionField">
+                    <Default>freedom</Default>
+                    <Required>Y</Required>
+                    <OptionValues>
+                        <freedom>freedom</freedom>
+                        <blackhole>blackhole</blackhole>
+                        <vless>vless</vless>
+                        <vmess>vmess</vmess>
+                        <trojan>trojan</trojan>
+                        <shadowsocks>shadowsocks</shadowsocks>
+                        <socks>socks</socks>
+                        <http>http</http>
+                        <wireguard>wireguard</wireguard>
+                        <dns>dns</dns>
+                        <loopback>loopback</loopback>
+                    </OptionValues>
+                </protocol>
+                <!-- 只存手工出站；订阅节点为派生数据，见 ui/sub/ -->
+                <settings type="TextField">
+                    <Default>{}</Default>
+                </settings>
+                <streamSettings type="TextField">
+                    <Default>{}</Default>
+                </streamSettings>
+            </outbound>
+        </outbounds>
+        <subscriptions>
+            <subscription type="ArrayField">
+                <enabled type="BooleanField">
+                    <Default>1</Default>
+                    <Required>Y</Required>
+                </enabled>
+                <name type="TextField">
+                    <Required>Y</Required>
+                </name>
+                <url type="TextField">
+                    <Required>Y</Required>
+                </url>
+                <last_update type="TextField"/>
+                <count type="IntegerField">
+                    <Default>0</Default>
+                </count>
+            </subscription>
+        </subscriptions>
+        <routing>
+            <domainStrategy type="OptionField">
+                <Default>IPIfNonMatch</Default>
+                <Required>Y</Required>
+                <OptionValues>
+                    <AsIs>AsIs</AsIs>
+                    <IPIfNonMatch>IPIfNonMatch</IPIfNonMatch>
+                    <IPOnDemand>IPOnDemand</IPOnDemand>
+                    <UseIP>UseIP</UseIP>
+                    <UseIPv4>UseIPv4</UseIPv4>
+                    <UseIPv6>UseIPv6</UseIPv6>
+                </OptionValues>
+            </domainStrategy>
+            <domainMatcher type="TextField"/>
+            <rules>
+                <rule type="ArrayField">
+                    <enabled type="BooleanField">
+                        <Default>1</Default>
+                        <Required>Y</Required>
+                    </enabled>
+                    <priority type="IntegerField">
+                        <Default>100</Default>
+                        <Required>Y</Required>
+                    </priority>
+                    <name type="TextField"/>
+                    <type type="OptionField">
+                        <Default>field</Default>
+                        <Required>Y</Required>
+                        <OptionValues>
+                            <field>field</field>
+                        </OptionValues>
+                    </type>
+                    <!-- 字符串列表：JSON 数组文本（转义存储），避免 AsList 的逗号分隔歧义 -->
+                    <domain type="TextField">
+                        <Default>[]</Default>
+                    </domain>
+                    <ip type="TextField">
+                        <Default>[]</Default>
+                    </ip>
+                    <port type="TextField"/>
+                    <network type="TextField"/>
+                    <protocol type="TextField">
+                        <Default>[]</Default>
+                    </protocol>
+                    <inboundTag type="TextField">
+                        <Default>[]</Default>
+                    </inboundTag>
+                    <source type="TextField">
+                        <Default>[]</Default>
+                    </source>
+                    <user type="TextField">
+                        <Default>[]</Default>
+                    </user>
+                    <!-- JSON 对象文本 -->
+                    <attrs type="TextField">
+                        <Default>{}</Default>
+                    </attrs>
+                    <outboundTag type="TextField">
+                        <Required>Y</Required>
+                    </outboundTag>
+                </rule>
+            </rules>
+        </routing>
+        <dns>
+            <enabled type="BooleanField">
+                <Default>0</Default>
+                <Required>Y</Required>
+            </enabled>
+            <listen type="TextField">
+                <Default>127.0.0.1</Default>
+            </listen>
+            <port type="IntegerField">
+                <Default>53</Default>
+                <MinimumValue>1</MinimumValue>
+                <MaximumValue>65535</MaximumValue>
+            </port>
+            <queryStrategy type="OptionField">
+                <Default>UseIP</Default>
+                <Required>Y</Required>
+                <OptionValues>
+                    <UseIP>UseIP</UseIP>
+                    <UseIPv4>UseIPv4</UseIPv4>
+                    <UseIPv6>UseIPv6</UseIPv6>
+                </OptionValues>
+            </queryStrategy>
+            <disableCache type="BooleanField">
+                <Default>0</Default>
+            </disableCache>
+            <disableFallback type="BooleanField">
+                <Default>0</Default>
+            </disableFallback>
+            <clientIp type="TextField"/>
+            <servers>
+                <server type="ArrayField">
+                    <enabled type="BooleanField">
+                        <Default>1</Default>
+                        <Required>Y</Required>
+                    </enabled>
+                    <address type="TextField">
+                        <Required>Y</Required>
+                    </address>
+                    <port type="IntegerField">
+                        <Default>53</Default>
+                        <MinimumValue>1</MinimumValue>
+                        <MaximumValue>65535</MaximumValue>
+                    </port>
+                    <!-- JSON 数组文本 -->
+                    <domains type="TextField">
+                        <Default>[]</Default>
+                    </domains>
+                    <expectIPs type="TextField">
+                        <Default>[]</Default>
+                    </expectIPs>
+                    <skipFallback type="BooleanField">
+                        <Default>0</Default>
+                    </skipFallback>
+                </server>
+            </servers>
+        </dns>
+    </items>
+</model>

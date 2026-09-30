@@ -40,6 +40,8 @@ class SubscriptionController extends CrudBase
 
     /**
      * Trigger subscription import via configd. POST {"uuid": "..."} or empty for all.
+     * The importer writes derived node caches to ui/sub/<uuid>.json; this
+     * action then refreshes last_update/count on the subscription items.
      */
     public function updateAction()
     {
@@ -48,6 +50,26 @@ class SubscriptionController extends CrudBase
         $backend = new Backend();
         $response = $backend->configdpRun('xray subscription_update', array($uuid));
         $decoded = json_decode($response, true);
+        if (is_array($decoded) && isset($decoded['updated']) && is_array($decoded['updated'])) {
+            $store = \OPNsense\Xray\Store::load('subscriptions', array());
+            $items = isset($store['subscriptions']) ? $store['subscriptions'] : array();
+            foreach ($decoded['updated'] as $r) {
+                if (!isset($r['uuid'])) {
+                    continue;
+                }
+                foreach ($items as &$it) {
+                    if (isset($it['uuid']) && $it['uuid'] === $r['uuid']) {
+                        if (empty($r['error'])) {
+                            $it['last_update'] = isset($r['updated']) ? $r['updated'] : '';
+                            $it['count'] = (int)(isset($r['imported']) ? $r['imported'] : 0);
+                        }
+                    }
+                }
+                unset($it);
+            }
+            $store['subscriptions'] = $items;
+            \OPNsense\Xray\Store::save('subscriptions', $store);
+        }
         if (is_array($decoded)) {
             return $decoded;
         }
@@ -55,20 +77,23 @@ class SubscriptionController extends CrudBase
     }
 
     /**
-     * Remove all outbounds previously imported from a subscription.
+     * Remove the derived node cache of a subscription.
      */
     public function purgeAction($uuid)
     {
-        $store = \OPNsense\Xray\Store::load('outbounds', array());
-        $items = isset($store['outbounds']) ? $store['outbounds'] : array();
-        $before = count($items);
-        $items = array_values(array_filter($items, function ($o) use ($uuid) {
-            return !(isset($o['from_subscription']) && $o['from_subscription'] === $uuid);
-        }));
-        $store['outbounds'] = $items;
-        if (!\OPNsense\Xray\Store::save('outbounds', $store)) {
-            return array('result' => 'failed', 'error' => 'write failed');
+        $purged = \OPNsense\Xray\Store::deleteSubCache($uuid);
+        return array('result' => 'ok', 'purged' => (bool)$purged);
+    }
+
+    /**
+     * Delete a subscription and its derived node cache.
+     */
+    public function delAction($uuid)
+    {
+        $result = parent::delAction($uuid);
+        if (isset($result['result']) && $result['result'] === 'deleted') {
+            \OPNsense\Xray\Store::deleteSubCache($uuid);
         }
-        return array('result' => 'ok', 'removed' => $before - count($items));
+        return $result;
     }
 }

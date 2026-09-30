@@ -7,11 +7,14 @@ Fetches subscription URLs and converts entries into xray outbound objects:
   - base64-encoded lists of the above
   - raw JSON: a single outbound object or {"outbounds": [...]}
 
-Existing outbounds imported from the same subscription (matched by
-from_subscription uuid) are replaced atomically.
+Subscription nodes are *derived data*: they are written to
+ui/sub/<uuid>.json (atomic replace) and merged at apply time.
+config.xml itself only stores the subscription sources. On fetch
+failure the previous cache is kept untouched.
 
 Usage:
     subscription.py --update-all [uuid]
+    subscription.py --parse-file <path>   # parse share links, print {"outbounds": [...]}
 """
 import argparse
 import base64
@@ -25,7 +28,7 @@ import urllib.parse
 import urllib.request
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from xray_lib import load_store, new_uuid, save_store  # noqa: E402
+from xray_lib import SUB_CACHE_DIR, load_xray_config, save_json  # noqa: E402
 
 
 def b64decode_padded(s):
@@ -310,21 +313,9 @@ def parse_link(line):
         return None
 
 
-def fetch(url, timeout=30):
-    req = urllib.request.Request(
-        url, headers={"User-Agent": "os-xray/1.0"}
-    )
-    with urllib.request.urlopen(req, timeout=timeout) as resp:
-        return resp.read().decode("utf-8", errors="replace")
-
-
-def import_subscription(sub):
-    """Fetch + parse one subscription, return (outbounds, error)."""
-    try:
-        body = fetch(sub["url"])
-    except Exception as e:  # noqa: BLE001
-        return [], "fetch failed: %s" % e
-
+def parse_body_to_outbounds(body, name_prefix="imported"):
+    """Parse a subscription/share-link body into plain outbound dicts
+    ({tag, protocol, settings, streamSettings})."""
     outbounds = []
     text = body.strip()
     # raw JSON?
@@ -336,21 +327,18 @@ def import_subscription(sub):
                 items = [obj]
             if items:
                 for i, ob in enumerate(items):
+                    if not isinstance(ob, dict) or not ob.get("protocol"):
+                        continue
                     ob = dict(ob)
-                    ob.setdefault("tag", safe_tag(sub["name"], ob.get("tag", i)))
                     outbounds.append(
                         {
-                            "uuid": new_uuid(),
-                            "enabled": True,
-                            "tag": ob.pop("tag"),
-                            "protocol": ob.pop("protocol", "freedom"),
-                            "settings": ob.pop("settings", {}),
-                            "streamSettings": ob.pop("streamSettings", {}),
-                            "from_subscription": sub["uuid"],
-                            "subscription": sub["name"],
+                            "tag": safe_tag(name_prefix, ob.get("tag", i)),
+                            "protocol": ob.get("protocol"),
+                            "settings": ob.get("settings", {}),
+                            "streamSettings": ob.get("streamSettings", {}),
                         }
                     )
-                return outbounds, None
+                return outbounds
         except ValueError:
             pass
 
@@ -358,65 +346,97 @@ def import_subscription(sub):
         parsed = parse_link(line)
         if not parsed:
             continue
-        tag = safe_tag(sub["name"], parsed.pop("remark") or "%s-%d" % (parsed["protocol"], i))
+        tag = safe_tag(
+            name_prefix, parsed.pop("remark") or "%s-%d" % (parsed["protocol"], i)
+        )
         outbounds.append(
             {
-                "uuid": new_uuid(),
-                "enabled": True,
                 "tag": tag,
                 "protocol": parsed["protocol"],
                 "settings": parsed["settings"],
                 "streamSettings": parsed.get("streamSettings", {}),
-                "from_subscription": sub["uuid"],
-                "subscription": sub["name"],
             }
         )
-    return outbounds, None
+    return outbounds
+
+
+def fetch(url, timeout=30):
+    req = urllib.request.Request(url, headers={"User-Agent": "os-xray/1.0"})
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        return resp.read().decode("utf-8", errors="replace")
+
+
+def import_subscription(sub):
+    """Fetch + parse one subscription, return (outbounds, error)."""
+    try:
+        body = fetch(sub["url"])
+    except Exception as e:  # noqa: BLE001
+        return [], "fetch failed: %s" % e
+    return parse_body_to_outbounds(body, sub.get("name") or "sub"), None
 
 
 def update_one(sub):
     outbounds, error = import_subscription(sub)
-    store = load_store("outbounds", {"outbounds": []})
-    kept = [o for o in store.get("outbounds", []) if o.get("from_subscription") != sub["uuid"]]
-    kept.extend(outbounds)
-    store["outbounds"] = kept
-    save_store("outbounds", store)
-
-    subs = load_store("subscriptions", {"subscriptions": []})
-    for s in subs.get("subscriptions", []):
-        if s.get("uuid") == sub["uuid"]:
-            s["last_update"] = datetime.datetime.now().isoformat(timespec="seconds")
-            s["count"] = len(outbounds)
-            if error:
-                s["last_error"] = error
-            else:
-                s.pop("last_error", None)
-    save_store("subscriptions", subs)
-    return {"name": sub.get("name"), "imported": len(outbounds), "error": error}
+    now = datetime.datetime.now().isoformat(timespec="seconds")
+    if error is None:
+        # de-dup tags inside this subscription's own cache
+        seen = set()
+        for ob in outbounds:
+            tag = ob.get("tag") or "node"
+            base, n = tag, 2
+            while tag in seen:
+                tag = "%s-%d" % (base, n)
+                n += 1
+            seen.add(tag)
+            ob["tag"] = tag
+        save_json(
+            os.path.join(SUB_CACHE_DIR, sub["uuid"] + ".json"),
+            {"subscription": sub["uuid"], "updated": now, "outbounds": outbounds},
+        )
+    return {
+        "uuid": sub.get("uuid"),
+        "name": sub.get("name"),
+        "imported": len(outbounds),
+        "updated": now,
+        "error": error,
+    }
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--update-all", action="store_true")
+    ap.add_argument("--parse-file", default=None, help="parse share links from file")
     ap.add_argument("uuid", nargs="?", default=None, help="optional subscription uuid")
     args = ap.parse_args()
 
-    subs = load_store("subscriptions", {"subscriptions": []}).get("subscriptions", [])
-    targets = [s for s in subs if s.get("enabled", True)]
+    if args.parse_file:
+        try:
+            with open(args.parse_file, "r", encoding="utf-8") as f:
+                body = f.read()
+        except OSError as e:
+            print(json.dumps({"result": "failed", "error": str(e)}))
+            return 1
+        outbounds = parse_body_to_outbounds(body)
+        print(json.dumps({"result": "ok", "outbounds": outbounds}, ensure_ascii=False))
+        return 0
+
+    subs = [s for s in load_xray_config()["subscriptions"] if s.get("enabled")]
+    targets = subs
     if args.uuid:
-        targets = [s for s in targets if s.get("uuid") == args.uuid]
+        targets = [s for s in subs if s.get("uuid") == args.uuid]
     if not targets:
-        print(json.dumps({"result": "ok", "updated": [], "note": "no enabled subscriptions"}))
+        print(
+            json.dumps(
+                {"result": "ok", "updated": [], "note": "no enabled subscriptions"}
+            )
+        )
         return 0
 
     results = [update_one(s) for s in targets]
     failed = [r for r in results if r["error"]]
     print(
         json.dumps(
-            {
-                "result": "failed" if failed else "ok",
-                "updated": results,
-            },
+            {"result": "failed" if failed else "ok", "updated": results},
             ensure_ascii=False,
         )
     )

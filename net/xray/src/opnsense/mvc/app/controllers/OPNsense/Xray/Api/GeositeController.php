@@ -53,8 +53,7 @@ class GeositeController extends ApiControllerBase
             $data = array();
         }
         $settings = Store::load('settings', array());
-        $assetDir = isset($settings['asset_dir']) && $settings['asset_dir'] !== ''
-            ? $settings['asset_dir'] : '/usr/local/etc/xray';
+        $assetDir = '/usr/local/etc/xray';
         $jobs = array();
         if (!empty($data['geosite'])) {
             $jobs['geosite.dat'] = isset($settings['geosite_url']) ? $settings['geosite_url'] : '';
@@ -93,8 +92,7 @@ class GeositeController extends ApiControllerBase
             return array('result' => 'failed', 'error' => 'no file uploaded');
         }
         $settings = Store::load('settings', array());
-        $assetDir = isset($settings['asset_dir']) && $settings['asset_dir'] !== ''
-            ? $settings['asset_dir'] : '/usr/local/etc/xray';
+        $assetDir = '/usr/local/etc/xray';
         foreach ($this->request->getUploadedFiles() as $file) {
             $dest = $assetDir . '/geosite.dat';
             if (!$file->moveTo($dest)) {

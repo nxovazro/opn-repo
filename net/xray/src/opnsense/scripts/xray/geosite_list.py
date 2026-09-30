@@ -16,7 +16,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from xray_lib import ASSET_DIR, load_store, save_store  # noqa: E402
+from xray_lib import ASSET_DIR, save_store  # noqa: E402
 
 
 class ProtoReader:
@@ -105,12 +105,9 @@ def find_dat(explicit):
     candidates = []
     if explicit:
         candidates.append(explicit)
-    settings = load_store("settings", {})
-    asset_dir = settings.get("asset_dir") or ASSET_DIR
     candidates += [
-        os.path.join(asset_dir, "geosite.dat"),
+        os.path.join(ASSET_DIR, "geosite.dat"),
         "/usr/local/share/xray/geosite.dat",
-        "/usr/local/etc/xray/geosite.dat",
     ]
     for p in candidates:
         if p and os.path.isfile(p):

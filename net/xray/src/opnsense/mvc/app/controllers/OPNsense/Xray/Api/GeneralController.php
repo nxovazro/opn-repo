@@ -16,9 +16,6 @@ class GeneralController extends ApiControllerBase
     {
         $defaults = array(
             'enabled' => false,
-            'xray_bin' => '/usr/local/bin/xray',
-            'confdir' => '/usr/local/etc/xray/conf.d',
-            'asset_dir' => '/usr/local/etc/xray',
             'log_level' => 'warning',
             'log_access' => '',
             'log_error' => '',
@@ -40,11 +37,6 @@ class GeneralController extends ApiControllerBase
         $errors = array();
         if (isset($item['log_level']) && !in_array($item['log_level'], array('debug', 'info', 'warning', 'error', 'none'))) {
             $errors[] = 'log_level invalid';
-        }
-        foreach (array('xray_bin', 'confdir', 'asset_dir') as $f) {
-            if (isset($item[$f]) && trim($item[$f]) === '') {
-                $errors[] = $f . ' must not be empty';
-            }
         }
         if (!empty($errors)) {
             return array('result' => 'failed', 'validations' => $errors);
