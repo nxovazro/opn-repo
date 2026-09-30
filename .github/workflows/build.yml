@@ -19,10 +19,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build os-nxova-xray package in FreeBSD 15.1 VM
+      - name: Build os-nxova-xray package in FreeBSD 14.3 VM
         uses: vmactions/freebsd-vm@v1
         with:
-          release: '15.1'
+          release: '14.3'
           usesh: true
           copyback: true
           run: |
