@@ -1,12 +1,14 @@
 #!/bin/sh
 # os-nxova-xray 自动构建脚本
 #
-# 执行环境：FreeBSD 14.3（pkg 2.3.x，与 OPNsense 26.7 的 pkg 2.3.1 兼容），由 .github/workflows/build.yml
-# 经 vmactions/freebsd-vm 调用；也可以在任意 FreeBSD 14.x 上手动执行：
+# 执行环境：FreeBSD 15.0（参考 nxovaeng/opn-box 的做法），由 .github/workflows/build.yml
+# 经 vmactions/freebsd-vm 调用；也可以在任意 FreeBSD 15.0 上手动执行：
 #
-# 注意：不要用 FreeBSD 15.x 构建！15.x 自带 pkg 2.4.2，打出来的包在
+# 注意：不要用 FreeBSD 15.1+ 构建！15.1 自带 pkg 2.4.2，打出来的包在
 # pkg 2.3.1 上安装会 segfault（FreeBSD bug #290959，崩在 sqlite3 写
-# manifestdigest 时）。必须用 pkg 2.3.x 构建。
+# manifestdigest 时）。15.0 的 pkg 应为 2.3.x，与 OPNsense 26.7 的
+# pkg 2.3.1 兼容。如果 15.0 构建的包依然 segfault，说明 15.0 的 pkg
+# 也是 2.4.x，需另想办法（如手动构造 +MANIFEST）。
 #     sh autobuild/build.sh
 #
 # 产物：autobuild/dist/（os-nxova-xray-*.pkg + pkg repo 元数据 + index.html），
