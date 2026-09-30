@@ -1,0 +1,47 @@
+#!/bin/sh
+#
+# +POST_INSTALL for os-nxova-xray
+#
+# The xray service is managed by the stock xray-core rc script
+# (/usr/local/etc/rc.d/xray ships with the xray-core package and runs
+# `xray run -confdir ${xray_config}`). Point it at our confdir and asset
+# dir via /etc/rc.conf.d/xray. Our own rc script was removed to avoid a
+# file conflict with the xray-core package.
+#
+
+XRAY_ETC=/usr/local/etc/xray
+UI_DIR=${XRAY_ETC}/ui
+CONFDIR=${XRAY_ETC}/conf.d
+SUBDIR=${UI_DIR}/sub
+
+mkdir -p "${UI_DIR}" "${SUBDIR}" "${CONFDIR}"
+# world-readable: the stock rc script may run xray as an unprivileged user
+chmod 755 "${XRAY_ETC}" "${UI_DIR}" "${SUBDIR}" "${CONFDIR}"
+
+cat > /etc/rc.conf.d/xray <<EOF
+# os-nxova-xray: use our confdir instead of the xray-core package default
+xray_enable="YES"
+xray_config="${CONFDIR}"
+xray_env="XRAY_LOCATION_ASSET=${XRAY_ETC}"
+EOF
+chmod 644 /etc/rc.conf.d/xray
+
+# make helper scripts executable
+chmod +x /usr/local/opnsense/scripts/xray/*.py 2>/dev/null
+
+# try to fetch geosite.dat/geoip.dat on first install (non-fatal)
+if [ ! -f "${XRAY_ETC}/geosite.dat" ]; then
+    /usr/local/bin/fetch -q -o "${XRAY_ETC}/geosite.dat" \
+        "https://github.com/v2fly/domain-list-community/releases/latest/download/dlc.dat" 2>/dev/null || true
+fi
+if [ ! -f "${XRAY_ETC}/geoip.dat" ]; then
+    /usr/local/bin/fetch -q -o "${XRAY_ETC}/geoip.dat" \
+        "https://github.com/v2fly/geoip/releases/latest/download/geoip.dat" 2>/dev/null || true
+fi
+chmod 644 "${XRAY_ETC}"/geosite.dat "${XRAY_ETC}"/geoip.dat 2>/dev/null || true
+
+# refresh configd so new actions are picked up
+/usr/sbin/service configd restart 2>/dev/null || true
+
+echo "os-nxova-xray installed. Open VPN -> Xray in the OPNsense web UI to configure."
+exit 0

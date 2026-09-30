@@ -30,13 +30,16 @@ function xray_services()
 {
     $services = array();
 
-    $settings_file = '/usr/local/etc/xray/ui/settings.json';
+    // enabled flag lives in config.xml (//OPNsense/xray/general/enabled) since the
+    // config.xml storage rework; the old ui/settings.json is no longer written.
     $enabled = false;
-    if (is_file($settings_file)) {
-        $settings = json_decode(@file_get_contents($settings_file), true);
-        if (is_array($settings) && !empty($settings['enabled'])) {
-            $enabled = true;
+    try {
+        $cfg = \OPNsense\Core\Config::getInstance()->object();
+        if (isset($cfg->OPNsense->xray->general->enabled)) {
+            $enabled = ((string)$cfg->OPNsense->xray->general->enabled === '1');
         }
+    } catch (\Exception $e) {
+        $enabled = false;
     }
 
     if ($enabled) {

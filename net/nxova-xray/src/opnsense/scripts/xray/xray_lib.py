@@ -36,15 +36,15 @@ def load_json(path, default):
         return default
 
 
-def save_json(path, data):
-    """Atomic write (tmp file + rename), mode 0640."""
+def save_json(path, data, mode=0o640):
+    """Atomic write (tmp file + rename). mode defaults to 0640."""
     os.makedirs(os.path.dirname(path), exist_ok=True)
     fd, tmp = tempfile.mkstemp(dir=os.path.dirname(path), prefix=".tmp-")
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
             f.write("\n")
-        os.chmod(tmp, 0o640)
+        os.chmod(tmp, mode)
         os.replace(tmp, path)
     finally:
         if os.path.exists(tmp):

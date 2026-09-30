@@ -1,7 +1,13 @@
 #!/usr/local/bin/python3
 """
-os-xray apply: compile config.xml (//OPNsense/xray) into xray's
+os-nxova-xray apply: compile config.xml (//OPNsense/xray) into xray's
 multi-file confdir, validate with `xray -test`, then restart the service.
+
+The service itself is managed by the stock xray-core rc script
+(/usr/local/etc/rc.d/xray ships with the xray-core package and already
+runs `xray run -confdir ...`); our +POST_INSTALL points it at our confdir
+via /etc/rc.conf.d/xray. Our own rc script was removed to avoid a file
+conflict with the xray-core package.
 
 - Routing rules are written strictly in ascending priority order
   (enabled rules only); Python's sort is stable so equal priorities keep
@@ -242,7 +248,8 @@ def main():
             os.unlink(stale)
 
     for name, data in files.items():
-        save_json(os.path.join(CONFDIR, name), data)
+        # 0644: the stock xray-core rc script may run xray as an unprivileged user
+        save_json(os.path.join(CONFDIR, name), data, mode=0o644)
 
     # validate before touching the running service
     env = dict(os.environ)

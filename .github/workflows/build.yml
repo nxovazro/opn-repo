@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'net/xray/**'
+      - 'net/nxova-xray/**'
       - 'autobuild/**'
       - '.github/workflows/build.yml'
   workflow_dispatch:
@@ -19,7 +19,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build os-xray package in FreeBSD 15.1 VM
+      - name: Build os-nxova-xray package in FreeBSD 15.1 VM
         uses: vmactions/freebsd-vm@v1
         with:
           release: '15.1'

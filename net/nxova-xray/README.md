@@ -1,11 +1,27 @@
-# os-xray —— OPNsense 26.7 的 xray-core Web 管理插件
+# os-nxova-xray —— OPNsense 26.7 的 xray-core Web 管理插件
 
 [![build](https://github.com/nxovazro/opn-repo/actions/workflows/build.yml/badge.svg)](https://github.com/nxovazro/opn-repo/actions/workflows/build.yml)
 
-为 OPNsense 26.7 适配的 `os-xray` 插件：提供 xray-core 的 Web 管理界面。
+为 OPNsense 26.7 适配的 `os-nxova-xray` 插件：提供 xray-core 的 Web 管理界面。
 配置存 OPNsense 标准 `config.xml`（经 MVC 模型 `OPNsense/Xray`），支持入站编辑、
 出站管理（含订阅与分享链接导入）、带优先级的路由编辑器、DNS 分流、
 geosite.dat 分类提取 + 常用分类下拉多选。
+
+## 安装
+
+pkg 源（GitHub Pages 自动构建）：`https://nxovazro.github.io/opn-repo`
+
+新建 `/usr/local/etc/pkg/repos/nxova-opn.conf`：
+
+```
+nxova-opn: {
+  url: "https://nxovazro.github.io/opn-repo",
+  enabled: yes
+}
+```
+
+然后 `pkg update -r nxova-opn && pkg install -y os-nxova-xray`。
+包依赖的 `xray-core` 由 OPNsense 官方源提供。
 
 ## 架构
 

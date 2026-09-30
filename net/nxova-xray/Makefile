@@ -1,4 +1,4 @@
-PLUGIN_NAME=		xray
+PLUGIN_NAME=		nxova-xray
 PLUGIN_VERSION=		1.0
 PLUGIN_COMMENT=		Xray-core web management interface
 PLUGIN_DEPENDS=		xray-core
