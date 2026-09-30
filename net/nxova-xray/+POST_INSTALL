@@ -1,12 +1,12 @@
 #!/bin/sh
 #
-# +POST_INSTALL for os-nxova-xray
+# +POST_INSTALL for os-nxova-xray (minimal: file setup only, no external commands)
 #
-# The xray service is managed by the stock xray-core rc script
-# (/usr/local/etc/rc.d/xray ships with the xray-core package and runs
-# `xray run -confdir ${xray_config}`). Point it at our confdir and asset
-# dir via /etc/rc.conf.d/xray. Our own rc script was removed to avoid a
-# file conflict with the xray-core package.
+# This script intentionally avoids calling external commands like
+# `service` or `pluginctl`: on some systems pkg's install child can die
+# with a segmentation fault when the script forks helpers. All the
+# essential file setup is done here; the two manual steps printed at the
+# end finish the job.
 #
 
 XRAY_ETC=/usr/local/etc/xray
@@ -19,7 +19,7 @@ mkdir -p "${UI_DIR}" "${SUBDIR}" "${CONFDIR}"
 chmod 755 "${XRAY_ETC}" "${UI_DIR}" "${SUBDIR}" "${CONFDIR}"
 
 cat > /etc/rc.conf.d/xray <<EOF
-# os-nxova-xray: use our confdir instead of the xray-core package default
+# os-xray: use our confdir instead of the xray-core package default
 xray_enable="YES"
 xray_config="${CONFDIR}"
 xray_env="XRAY_LOCATION_ASSET=${XRAY_ETC}"
@@ -27,19 +27,19 @@ EOF
 chmod 644 /etc/rc.conf.d/xray
 
 # make helper scripts executable
-chmod +x /usr/local/opnsense/scripts/xray/*.py 2>/dev/null
+chmod +x /usr/local/opnsense/scripts/xray/*.py 2>/dev/null || true
 
 # NOTE: geosite.dat/geoip.dat are intentionally NOT fetched here.
 # Downloading from GitHub at install time can stall the install on slow
 # networks; use the Xray -> Geosite page in the web UI to download them.
 
-# refresh configd so new actions are picked up
-/usr/sbin/service configd restart 2>/dev/null || true
+# flush the web UI menu cache by removing the file directly
+# (no pluginctl call; pkg installs from a third-party repo don't trigger
+# rc.configure_plugins, so we do it ourselves)
+rm -f /var/lib/php/tmp/opnsense_menu_cache.xml 2>/dev/null || true
 
-# flush the web UI menu/ACL cache so the Xray menu appears immediately
-# (pkg installs from a third-party repo don't trigger rc.configure_plugins)
-/usr/local/sbin/pluginctl -cq cache_flush 2>/dev/null || \
-    rm -f /var/lib/php/tmp/opnsense_menu_cache.xml 2>/dev/null || true
-
-echo "os-nxova-xray installed. Open VPN -> Xray in the OPNsense web UI to configure."
+echo "os-nxova-xray installed. Two manual steps remain:"
+echo "  1. service configd restart"
+echo "  2. configctl webgui restart   (refreshes PHP so the new model loads)"
+echo "Then open VPN -> Xray in the OPNsense web UI to configure."
 exit 0

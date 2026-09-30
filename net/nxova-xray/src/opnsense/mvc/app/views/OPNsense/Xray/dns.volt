@@ -82,7 +82,7 @@
 
 <script>
 $(document).ready(function() {
-  var api = '/api/xray/dnsserver';
+  var api = '/api/xray/dns_server';
   var editing = null;
 
   function esc(s) { return String(s === undefined ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
