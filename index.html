@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html lang="zh-CN"><head><meta charset="utf-8">
-<title>os-xray pkg 仓库</title></head>
+<title>os-nxova-xray pkg 仓库</title></head>
 <body style="font-family:sans-serif;max-width:720px;margin:2em auto;">
-<h2>os-xray pkg 仓库</h2>
-<p>构建时间：2026-09-30 03:27 UTC ｜ 包：<a href="os-xray-1.0.pkg">os-xray-1.0.pkg</a></p>
+<h2>os-nxova-xray pkg 仓库（nxova-opn）</h2>
+<p>构建时间：2026-09-30 04:09 UTC ｜ 包：<a href="os-nxova-xray-1.0.pkg">os-nxova-xray-1.0.pkg</a></p>
 <h3>在 OPNsense 上使用</h3>
-<p>新建 <code>/usr/local/etc/pkg/repos/os-xray.conf</code>：</p>
-<pre>os-xray: {
+<p>新建 <code>/usr/local/etc/pkg/repos/nxova-opn.conf</code>：</p>
+<pre>nxova-opn: {
   url: "https://nxovazro.github.io/opn-repo",
   enabled: yes
 }</pre>
-<p>然后执行：<code>pkg update -r os-xray &amp;&amp; pkg install -y os-xray</code></p>
+<p>然后执行：<code>pkg update -r nxova-opn &amp;&amp; pkg install -y os-nxova-xray</code></p>
 <p style="color:#666"><small>仓库未签名；包依赖的 xray-core 由 OPNsense 官方源提供。</small></p>
 </body></html>
