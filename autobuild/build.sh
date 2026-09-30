@@ -17,7 +17,11 @@ pkg update -f
 pkg install -y xray-core
 
 echo ">>> [2/4] 构建 os-nxova-xray 包 (make -C net/nxova-xray package)..."
-make -C net/nxova-xray package
+# PLUGIN_VERSION 必须每次递增，否则 pkg upgrade 会认为已是最新而不升级。
+# 用 UTC 日期时间生成版本：1.YYYYMMDDHHMM
+PKG_VERSION="1.$(date -u +%Y%m%d%H%M)"
+echo ">>> 包版本: $PKG_VERSION"
+make -C net/nxova-xray package PLUGIN_VERSION="$PKG_VERSION"
 
 echo ">>> [3/4] 生成 pkg 仓库元数据..."
 DIST="$REPO_ROOT/autobuild/dist"
