@@ -13,10 +13,11 @@ import tempfile
 import uuid
 import xml.etree.ElementTree as ET
 
-UI_DIR = "/usr/local/etc/xray/ui"
+UI_DIR = "/usr/local/etc/xray-ui"
 SUB_CACHE_DIR = os.path.join(UI_DIR, "sub")
-CONFDIR = "/usr/local/etc/xray/conf.d"
-ASSET_DIR = "/usr/local/etc/xray"
+CONFDIR = "/usr/local/etc/xray-core"
+# 官方 xray-core 包的资产位置（geosite.dat/geoip.dat），我们不改动
+ASSET_DIR = "/usr/local/share/xray-core"
 XRAY_BIN = "/usr/local/bin/xray"
 CONFIG_XML = "/conf/config.xml"
 
@@ -194,11 +195,13 @@ def load_xray_config(path=CONFIG_XML):
         root = ET.parse(path).getroot()
     except (OSError, ET.ParseError):
         return cfg
-    # root element is <opnsense>; model mounts at //OPNsense/xray
-    if root.tag == "opnsense":
+    # root element is <opnsense>; MVC models live under <OPNsense> (capital O, P):
+    # <opnsense><OPNsense><xray>. Fall back to direct <xray> for legacy layouts.
+    x = root.find("OPNsense/xray")
+    if x is None:
         x = root.find("xray")
-    else:
-        x = root.find("opnsense/xray")
+    if x is None:
+        x = root.find("opnsense/OPNsense/xray")
     if x is None:
         return cfg
 

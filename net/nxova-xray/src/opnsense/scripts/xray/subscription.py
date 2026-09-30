@@ -275,18 +275,40 @@ PARSERS = {
 
 
 def split_links(text):
-    """Split subscription body into candidate link lines."""
+    """Split subscription body into candidate link lines.
+
+    先检测内容是明文还是 base64：若去掉空白后符合 base64 字符集，
+    则先解码（支持带换行的 base64 和双重编码），再按行分析。
+    """
     text = text.strip()
     if not text:
         return []
-    # whole-body base64?
-    if "\n" not in text and re.fullmatch(r"[A-Za-z0-9+/=_-]+", text):
-        try:
-            decoded = b64decode_padded(text).decode("utf-8", errors="strict")
-            if "://" in decoded:
-                text = decoded
-        except (binascii.Error, UnicodeDecodeError):
-            pass
+    # base64 检测与解码（最多两层）
+    for _ in range(2):
+        compact = re.sub(r"\s+", "", text)
+        if (
+            re.fullmatch(r"[A-Za-z0-9+/=_-]+", compact)
+            and len(compact) >= 16
+        ):
+            try:
+                decoded = b64decode_padded(compact).decode("utf-8", errors="strict")
+                if decoded.strip() and all(
+                    c.isprintable() or c in "\r\n\t" for c in decoded[:500]
+                ):
+                    inner = re.sub(r"\s+", "", decoded)
+                    # 解码后仍是 base64 样子且不含链接 -> 继续解下一层
+                    if (
+                        re.fullmatch(r"[A-Za-z0-9+/=_-]+", inner)
+                        and len(inner) >= 16
+                        and "://" not in decoded
+                    ):
+                        text = decoded
+                        continue
+                    text = decoded
+                    break
+            except (binascii.Error, UnicodeDecodeError, ValueError):
+                pass
+        break
     lines = []
     for line in text.replace("\r\n", "\n").split("\n"):
         line = line.strip().strip("\"'")

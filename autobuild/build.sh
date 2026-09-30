@@ -32,9 +32,12 @@ rm -rf "$STAGE"
 mkdir -p "$STAGE/usr/local"
 cp -a "$SRC_DIR/etc" "$STAGE/usr/local/"
 cp -a "$SRC_DIR/opnsense" "$STAGE/usr/local/"
-# version 文件（OPNsense 插件版本标记）
-mkdir -p "$STAGE/usr/local/opnsense/version"
-echo "$PKG_VERSION" > "$STAGE/usr/local/opnsense/version/nxova-xray"
+# 注意：不要生成 /usr/local/opnsense/version/nxova-xray
+# OPNsense 通过 pkg 数据库跟踪插件版本，手动生成 version 文件
+# 会导致 firmware resync 报 "Ignoring invalid metadata"
+
+# 脚本需要可执行权限（git 里可能是 660，cp -a 会原样保留）
+chmod 755 "$STAGE/usr/local/opnsense/scripts/xray/"*.py
 
 # 生成 plist（相对 /usr/local 的文件列表）
 PLIST=/tmp/nxova-xray-plist

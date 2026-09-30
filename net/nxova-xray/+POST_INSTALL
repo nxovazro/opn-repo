@@ -9,22 +9,23 @@
 # end finish the job.
 #
 
-XRAY_ETC=/usr/local/etc/xray
-UI_DIR=${XRAY_ETC}/ui
-CONFDIR=${XRAY_ETC}/conf.d
-SUBDIR=${UI_DIR}/sub
+XRAY_CONFDIR=/usr/local/etc/xray-core
+XRAY_UIDIR=/usr/local/etc/xray-ui
+SUBDIR=${XRAY_UIDIR}/sub
 
-mkdir -p "${UI_DIR}" "${SUBDIR}" "${CONFDIR}"
+mkdir -p "${XRAY_UIDIR}" "${SUBDIR}" "${XRAY_CONFDIR}"
 # world-readable: the stock rc script may run xray as an unprivileged user
-chmod 755 "${XRAY_ETC}" "${UI_DIR}" "${SUBDIR}" "${CONFDIR}"
+chmod 755 "${XRAY_UIDIR}" "${SUBDIR}" "${XRAY_CONFDIR}"
 
+# 不要改动 xray-core 的配置路径（官方包自带默认值，资产在 /usr/local/share/xray-core/）。
+# 只在文件不存在时启用服务，不覆盖用户已有配置。
+if [ ! -f /etc/rc.conf.d/xray ]; then
 cat > /etc/rc.conf.d/xray <<EOF
-# os-xray: use our confdir instead of the xray-core package default
+# os-xray: enable xray service (config path left to xray-core defaults)
 xray_enable="YES"
-xray_config="${CONFDIR}"
-xray_env="XRAY_LOCATION_ASSET=${XRAY_ETC}"
 EOF
 chmod 644 /etc/rc.conf.d/xray
+fi
 
 # make helper scripts executable
 chmod +x /usr/local/opnsense/scripts/xray/*.py 2>/dev/null || true

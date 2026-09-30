@@ -4,7 +4,7 @@ os-xray geosite category extractor.
 
 Parses geosite.dat (protobuf GeoSiteList) with a minimal dependency-free
 parser and outputs the category (country_code) names. Result is cached to
-/usr/local/etc/xray/ui/geosite_categories.json for the web UI dropdown.
+/usr/local/etc/xray-ui/geosite_categories.json for the web UI dropdown.
 
 Usage:
     geosite_list.py --json [--dat /path/to/geosite.dat]

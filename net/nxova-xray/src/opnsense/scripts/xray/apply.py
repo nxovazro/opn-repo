@@ -5,9 +5,10 @@ multi-file confdir, validate with `xray -test`, then restart the service.
 
 The service itself is managed by the stock xray-core rc script
 (/usr/local/etc/rc.d/xray ships with the xray-core package and already
-runs `xray run -confdir ...`); our +POST_INSTALL points it at our confdir
-via /etc/rc.conf.d/xray. Our own rc script was removed to avoid a file
-conflict with the xray-core package.
+runs `xray run -confdir ...`). We write our generated JSON directly to
+the official confdir (/usr/local/etc/xray-core) and do NOT override
+the service's config path via /etc/rc.conf.d/xray. Our own rc script
+was removed to avoid a file conflict with the xray-core package.
 
 - Routing rules are written strictly in ascending priority order
   (enabled rules only); Python's sort is stable so equal priorities keep
